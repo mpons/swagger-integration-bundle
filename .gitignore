@@ -1,0 +1,6 @@
+/.idea/
+*.sublime-*
+**/vendor/*
+coverage/*
+notes.md
+/.php_cs.cache
