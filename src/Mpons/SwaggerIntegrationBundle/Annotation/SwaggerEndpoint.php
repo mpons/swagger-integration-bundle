@@ -1,6 +1,6 @@
 <?php
 
-namespace Mpons\SwaggerIntegrationBunble\Annotation;
+namespace Mpons\SwaggerIntegrationBundle\Annotation;
 
 /**
  * @Annotation
