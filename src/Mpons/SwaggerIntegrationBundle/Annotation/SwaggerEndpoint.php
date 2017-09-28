@@ -7,8 +7,6 @@ namespace Mpons\SwaggerIntegrationBundle\Annotation;
  */
 class SwaggerEndpoint
 {
+	public $description;
 
-    public function __construct($options)
-    {
-    }
 }

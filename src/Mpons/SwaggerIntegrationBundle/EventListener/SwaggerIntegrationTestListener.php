@@ -135,7 +135,6 @@ class SwaggerIntegrationTestListener implements TestListener
         if (!$methodAnnotation) {
             return;
         }
-
     }
 
     public function endTest(Test $test, $time)
