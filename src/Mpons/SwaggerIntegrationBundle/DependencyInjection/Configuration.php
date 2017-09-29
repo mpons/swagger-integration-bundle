@@ -12,13 +12,21 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  */
 class Configuration implements ConfigurationInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function getConfigTreeBuilder()
-    {
-        $treeBuilder = new TreeBuilder();
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getConfigTreeBuilder()
+	{
+		$treeBuilder = new TreeBuilder();
+		$rootNode = $treeBuilder->root('mpons_swagger_integration');
 
-        return $treeBuilder;
-    }
+		$rootNode
+			->children()
+				->scalarNode('info')->defaultValue('')->end()
+				->scalarNode('name')->defaultValue('')->end()
+				->scalarNode('version')->defaultValue('0.0.1')->end()
+				->scalarNode('json_path')->isRequired()->end()
+			->end();
+		return $treeBuilder;
+	}
 }

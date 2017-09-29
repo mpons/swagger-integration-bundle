@@ -2,21 +2,40 @@
 
 namespace Mpons\SwaggerIntegrationBundle\EventListener;
 
-use Mpons\SwaggerIntegrationBundle\Model\Parameter;
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerPath;
+use Mpons\SwaggerIntegrationBundle\Service\SwaggerService;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 
-final class RequestListener
+class RequestListener
 {
-	public static $endpoint = null;
+	/**
+	 * @var SwaggerPath
+	 */
+	public static $path = null;
 
-    public static function onKernelRequest(GetResponseEvent $event)
+	/**
+	 * @var SwaggerService
+	 */
+	private static $swagger;
+
+	public function __construct(SwaggerService $swagger)
+	{
+		if(empty(self::$swagger)) {
+			self::$swagger = $swagger;
+		}
+	}
+
+	public static function onKernelRequest(GetResponseEvent $event)
     {
-        if(self::$endpoint) {
-            self::$endpoint->path = $event->getRequest()->getPathInfo();
-            $headers = $event->getRequest()->headers->getIterator();
-            foreach ($headers as $key => $headerParam){
-		self::$endpoint->headerParameters[] = new Parameter($key, $headerParam[0]);
-			}
+        if(self::$path && $event->isMasterRequest()) {
+			self::$swagger->addPath($event, self::$path);
         }
     }
+
+    public static function terminate()
+	{
+		if(!empty(self::$swagger)) {
+			self::$swagger->terminate();
+		}
+	}
 }

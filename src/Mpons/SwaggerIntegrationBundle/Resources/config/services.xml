@@ -1,11 +1,21 @@
 <?xml version="1.0" ?>
 
 <container xmlns="http://symfony.com/schema/dic/services"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
-    <services>
-        <service class="Mpons\SwaggerIntegrationBundle\EventListener\RequestListener">
-            <tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest"/>
-        </service>
-    </services>
+		   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		   xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+	<services>
+
+		<service class="Mpons\SwaggerIntegrationBundle\EventListener\RequestListener">
+			<argument id="swagger_integration.swagger_service" type="service"/>
+			<tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest"/>
+		</service>
+
+		<service class="Mpons\SwaggerIntegrationBundle\Service\SwaggerService" id="swagger_integration.swagger_service">
+			<argument/> <!-- title -->
+			<argument/> <!-- description -->
+			<argument/> <!-- version -->
+			<argument/> <!-- jsonPath -->
+		</service>
+
+	</services>
 </container>
