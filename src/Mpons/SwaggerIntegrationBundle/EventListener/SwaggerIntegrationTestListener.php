@@ -3,9 +3,8 @@
 namespace Mpons\SwaggerIntegrationBundle\EventListener;
 
 use Doctrine\Common\Annotations\AnnotationReader;
-use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerEndpoint;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerPath;
-use Mpons\SwaggerIntegrationBundle\Model\Path;
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
 use PHPUnit\Exception;
 use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\Test;
@@ -34,6 +33,7 @@ class SwaggerIntegrationTestListener implements TestListener
 	protected $reader;
 
 	protected $endpointAnnotationClass = SwaggerPath::class;
+	protected $responseAnnotationClass = SwaggerResponse::class;
 
 	/**
 	 * Constructor.
@@ -45,6 +45,7 @@ class SwaggerIntegrationTestListener implements TestListener
 		$this->reader = new AnnotationReader();
 		$this->reader->addGlobalIgnoredName('vcr');
 		$this->reader->addGlobalIgnoredName('test');
+		$this->reader->addGlobalIgnoredName('expectedException');
 	}
 
 	/**
@@ -133,13 +134,15 @@ class SwaggerIntegrationTestListener implements TestListener
 		$reflectionMethod = new ReflectionMethod($class, $method);
 		$pathAnnotation = $this->reader
 			->getMethodAnnotation($reflectionMethod, $this->endpointAnnotationClass);
+		$responseAnnotation = $this->reader
+			->getMethodAnnotation($reflectionMethod, $this->responseAnnotationClass);
 
-		if (!$pathAnnotation) {
-			return;
+		if ($pathAnnotation) {
+			RequestListener::$path = $pathAnnotation;
 		}
-		//$endpoint = new Path();
-		//$endpoint->description = $methodAnnotation->description;
-		RequestListener::$path = $pathAnnotation;
+		if ($responseAnnotation) {
+			RequestListener::$response = $responseAnnotation;
+		}
 	}
 
 	public function endTest(Test $test, $time)

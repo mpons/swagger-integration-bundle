@@ -25,6 +25,9 @@ class Configuration implements ConfigurationInterface
 				->scalarNode('info')->defaultValue('')->end()
 				->scalarNode('name')->defaultValue('')->end()
 				->scalarNode('version')->defaultValue('0.0.1')->end()
+				->arrayNode('servers')
+					->prototype('scalar')->end()
+				->end()
 				->scalarNode('json_path')->isRequired()->end()
 			->end();
 		return $treeBuilder;

@@ -18,14 +18,28 @@ class SwaggerMapper
 
 	public static function mapSwaggerJson(stdClass $jsonContent): Swagger
 	{
-		$info = new Info($jsonContent->info->title, $jsonContent->info->description, $jsonContent->info->version);
-		$swagger = new Swagger($info);
-		$swagger->openapi = $jsonContent->openapi;
-		$swagger->paths = new Paths();
-		for($i = count($jsonContent->servers)-1; $i >= 0; $i--){
-			$swagger->servers[] = new Server($jsonContent->servers[$i]->url, $jsonContent->servers[$i]->description);
+		$title = '';
+		$description = '';
+		$version = '';
+
+		if(isset($jsonContent->info)) {
+			$title = isset($jsonContent->info->title) ? $jsonContent->info->title : '';
+			$description = isset($jsonContent->info->description) ? $jsonContent->info->description : '';
+			$version = isset($jsonContent->info->version) ? $jsonContent->info->version : '';
 		}
-		self::mapPaths($swagger, $jsonContent->paths);
+
+		$info = new Info($title, $description, $version);
+		$swagger = new Swagger($info);
+		$swagger->openapi = isset($jsonContent->openapi) ? $jsonContent->openapi : '3.0.0';
+		$swagger->paths = new Paths();
+		if(isset($jsonContent->servers)) {
+			for ($i = count($jsonContent->servers) - 1; $i >= 0; $i--) {
+				$swagger->servers[] = new Server($jsonContent->servers[$i]->url, $jsonContent->servers[$i]->description);
+			}
+		}
+		if(isset($jsonContent->paths)) {
+			self::mapPaths($swagger, $jsonContent->paths);
+		}
 		return $swagger;
 	}
 
@@ -62,13 +76,22 @@ class SwaggerMapper
 	private static function mapResponses(Responses $responses, stdClass $jsonResponses)
 	{
 		foreach ($jsonResponses as $responseCode => $attributes){
+			$content = new Content();
+			if(isset($attributes->content)) {
+				self::mapContent($content, $attributes->content);
+			}
 			$responses->{$responseCode} = new Response(
 				isset($attributes->description) ? $attributes->description : '',
-				isset($attributes->content) ? $attributes->content : null
+				$content
 				);
 		}
 	}
-
+	private static function mapContent(Content $content, stdClass $jsonContent)
+	{
+		foreach ($jsonContent as $contentType => $contentContent){
+			$content->{$contentType} = $contentContent;
+		}
+	}
 	private static function mapParameters(array $jsonParameters): array
 	{
 		return $jsonParameters;

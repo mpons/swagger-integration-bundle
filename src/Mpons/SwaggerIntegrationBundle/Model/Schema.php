@@ -2,6 +2,9 @@
 
 namespace Mpons\SwaggerIntegrationBundle\Model;
 
+use JMS\Serializer\Annotation\Type;
+use stdClass;
+
 class Schema
 {
     /**
@@ -11,17 +14,8 @@ class Schema
      */
     public $type;
 
-    /**
-     * @Type("string")
-     *
-     * @var string
-     */
-    public $default;
-
-    /**
-     * @Type("string")
-     *
-     * @var string
-     */
-    public $example;
+	/**
+	 * @var StdClass
+	 */
+    public $properties;
 }
