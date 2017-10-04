@@ -8,12 +8,14 @@
 		<service class="Mpons\SwaggerIntegrationBundle\EventListener\RequestListener">
 			<argument id="swagger_integration.swagger_service" type="service"/>
 			<tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest"/>
+			<tag name="kernel.event_listener" event="kernel.response" method="onKernelResponse"/>
 		</service>
 
 		<service class="Mpons\SwaggerIntegrationBundle\Service\SwaggerService" id="swagger_integration.swagger_service">
 			<argument/> <!-- title -->
 			<argument/> <!-- description -->
 			<argument/> <!-- version -->
+			<argument/> <!-- servers -->
 			<argument/> <!-- jsonPath -->
 		</service>
 

@@ -34,36 +34,45 @@ class Swagger
 	 */
 	public $servers;
 
+	/**
+     * @Type("array<Mpons\SwaggerIntegrationBundle\Model\Components>")
+     *
+	 * @var Components
+	 */
+	public $components;
+
 	public function __construct(Info $info)
 	{
 		$this->info = $info;
+		$this->paths = new Paths();
+		$this->servers = [];
+		$this->components = new Components();
 	}
 
 	public function addPath(string $pathName, Path $path)
 	{
-		$operation = $this->hasPath($pathName, $path);
-		if($operation === false) {
-			$this->paths->{$pathName} = $path;
+		if(!$this->paths->hasPath($pathName)) {
+			$this->paths->addPath($pathName, $path);
 		}else{
-			$this->paths->{$pathName}->{$operation} = $path->{$operation};
-		}
-	}
-
-	/**
-	 * @return bool|string
-	 */
-	public function hasPath(string $pathName, Path $path)
-	{
-		foreach ($this->paths as $pName => $p)
-		{
-			if($pName == $pathName){
-				foreach ($p as $operationName => $operation){
-					if(!empty($operation) && !empty($path->{$operationName})){
-						return $operationName;
-					}
+			foreach ($path as $operationName => $operation) {
+				if(!$this->paths->{$pathName}->hasOperation($operationName)){
+					$this->paths->{$pathName}->addOperation($operationName, $operation);
 				}
 			}
 		}
-		return false;
 	}
+
+	public function addResponse(string $pathName, string $operationName, string $responseName, Response $response)
+	{
+		if(!$this->paths->hasPath($pathName)) {
+			throw new \Exception('Cannot add response to a non-existing path');
+		}
+		if(!$this->paths->{$pathName}->hasOperation($operationName)){
+			throw new \Exception('Cannot add response to a non-existing operation');
+		}
+		if(!$this->paths->{$pathName}->{$operationName}->responses->hasResponse($responseName)){
+			$this->paths->{$pathName}->{$operationName}->responses->addResponse($responseName, $response);
+		}
+	}
+
 }

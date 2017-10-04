@@ -4,6 +4,6 @@ namespace Mpons\SwaggerIntegrationBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class SwaggerIntegrationBundle extends Bundle
+class MponsSwaggerIntegrationBundle extends Bundle
 {
 }

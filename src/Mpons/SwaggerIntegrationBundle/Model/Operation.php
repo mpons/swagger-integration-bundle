@@ -3,6 +3,7 @@
 namespace Mpons\SwaggerIntegrationBundle\Model;
 
 use JMS\Serializer\Annotation\Type;
+use stdClass;
 
 class Operation
 {
@@ -34,7 +35,8 @@ class Operation
      */
     public $responses;
 
-	public function __construct(string $summary, string $description = '', array $parameters = [], Responses $responses = null)
+
+	public function __construct(string $summary = '', string $description = '', array $parameters = [], Responses $responses = null)
 	{
 		$this->summary = $summary;
 		$this->description = $description;

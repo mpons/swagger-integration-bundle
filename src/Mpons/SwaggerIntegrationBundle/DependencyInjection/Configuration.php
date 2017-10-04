@@ -25,7 +25,10 @@ class Configuration implements ConfigurationInterface
 				->scalarNode('info')->defaultValue('')->end()
 				->scalarNode('name')->defaultValue('')->end()
 				->scalarNode('version')->defaultValue('0.0.1')->end()
-				->scalarNode('json_path')->isRequired()->end()
+				->arrayNode('servers')
+					->prototype('scalar')->end()
+				->end()
+				->scalarNode('json_path')->defaultValue('%kernel.project_dir%/doc/swagger/resources/swagger.json')->end()
 			->end();
 		return $treeBuilder;
 	}

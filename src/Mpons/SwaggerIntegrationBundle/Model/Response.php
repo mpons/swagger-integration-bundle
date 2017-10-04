@@ -16,13 +16,13 @@ class Response
     public $description;
 
     /**
-     * @Type("stdClass")
+     * @Type("Content")
      *
-     * @var stdClass
+     * @var Content
      */
     public $content;
 
-	public function __construct(string $description, stdClass $content)
+	public function __construct(string $description, Content $content)
 	{
 		$this->description = $description;
 		$this->content = $content;
