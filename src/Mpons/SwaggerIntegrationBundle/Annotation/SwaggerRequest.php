@@ -5,7 +5,7 @@ namespace Mpons\SwaggerIntegrationBundle\Annotation;
 /**
  * @Annotation
  */
-class SwaggerPath
+class SwaggerRequest
 {
 	public $description;
 

@@ -3,7 +3,7 @@
 namespace Mpons\SwaggerIntegrationBundle\EventListener;
 
 use Doctrine\Common\Annotations\AnnotationReader;
-use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerPath;
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
 use PHPUnit\Exception;
 use PHPUnit\Framework\AssertionFailedError;
@@ -32,7 +32,7 @@ class SwaggerIntegrationTestListener implements TestListener
 
 	protected $reader;
 
-	protected $endpointAnnotationClass = SwaggerPath::class;
+	protected $endpointAnnotationClass = SwaggerRequest::class;
 	protected $responseAnnotationClass = SwaggerResponse::class;
 
 	/**

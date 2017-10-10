@@ -4,7 +4,7 @@ namespace Mpons\SwaggerIntegrationBundle\Service;
 
 
 use Doctrine\Common\Annotations\AnnotationReader;
-use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerPath;
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
 use Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper;
 use Mpons\SwaggerIntegrationBundle\Model\Content;
@@ -55,7 +55,7 @@ class SwaggerService
 		}
 	}
 
-	public function addPath(GetResponseEvent $event, SwaggerPath $pathAnnotation)
+	public function addPath(GetResponseEvent $event, SwaggerRequest $pathAnnotation)
 	{
 		$path = new Path();
 		$pathName = $event->getRequest()->getPathInfo();
@@ -133,10 +133,10 @@ class SwaggerService
 			$result->{$prop->name} = new StdClass();
 			$annotations = $reader->getPropertyAnnotations($prop, 'JMS\Serializer\Annotation\Type');
 			foreach ($annotations as $annotation) {
-				$type = $this->extractArrayType($annotation);
-				if ($type) {
+				$arrayType = $this->extractArrayType($annotation);
+				if ($arrayType) {
 					$result->{$prop->name}->type = 'array';
-					$result->{$prop->name}->items = $this->createSchemaFromModel($type, $example->{$prop->name}[0]);
+					$result->{$prop->name}->items = $this->createSchemaFromModel($arrayType, $example->{$prop->name}[0]);
 				} else {
 					$result->{$prop->name}->type = $annotation->name;
 					$result->{$prop->name}->example = $example->{$prop->name};

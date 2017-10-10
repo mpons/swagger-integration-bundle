@@ -2,7 +2,7 @@
 
 namespace Mpons\SwaggerIntegrationBundle\EventListener;
 
-use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerPath;
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
 use Mpons\SwaggerIntegrationBundle\Service\SwaggerService;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
@@ -11,7 +11,7 @@ use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 class RequestListener
 {
 	/**
-	 * @var SwaggerPath
+	 * @var SwaggerRequest
 	 */
 	public static $path = null;
 	/**
@@ -47,7 +47,7 @@ class RequestListener
 		}
 	}
 
-    public static function terminate()
+    public function terminate()
 	{
 		if(!empty(self::$swagger)) {
 			self::$swagger->terminate();
