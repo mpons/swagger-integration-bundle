@@ -15,8 +15,10 @@ use Mpons\SwaggerIntegrationBundle\Model\Response;
 use Mpons\SwaggerIntegrationBundle\Model\Schema;
 use Mpons\SwaggerIntegrationBundle\Model\Server;
 use Mpons\SwaggerIntegrationBundle\Model\Swagger;
+use Mpons\SwaggerIntegrationBundle\ModelDescriber\ModelDescriberInterface;
 use ReflectionClass;
 use stdClass;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 
@@ -26,31 +28,34 @@ class SwaggerService
 	 * @var Swagger
 	 */
 	private $swagger;
+
 	/**
 	 * @var string
 	 */
 	private $jsonPath;
 
+	/**
+	 * @var ModelDescriberInterface
+	 */
+	private $modelDescriber;
+
 	public function __construct(
-		string $title,
-		string $description,
-		string $version,
-		array $servers,
-		string $jsonPath
+		array $config,
+		ModelDescriberInterface $modelDescriber
 	)
 	{
-		$this->jsonPath = $jsonPath;
-		$jsonContent = '{}';
-		if(file_exists($jsonPath)){
-			$jsonContent = file_get_contents($jsonPath);
+		$this->modelDescriber = $modelDescriber;
+		if(empty($config['json_path'])){
+			throw new RuntimeException('Defining a path for the json to load/output is required. Aborting.');
 		}
-		$this->swagger = SwaggerMapper::mapSwaggerJson(json_decode($jsonContent, false));//$serializer->deserialize(file_get_contents($jsonPath), Swagger::class, 'json');
-		$this->swagger->info->title = $title;
-		$this->swagger->info->description = $description;
-		$this->swagger->info->version = $version;
-		if(!empty($servers)){
-			foreach ($servers as $serverUrl){
-				$this->swagger->servers[] = new Server($serverUrl,'');
+		$this->jsonPath = $config['json_path'];
+		$this->loadJson();
+		$this->swagger->info->title = $config['name'];
+		$this->swagger->info->description = $config['info'];
+		$this->swagger->info->version = $config['version'];
+		if(!empty($config['servers'])){
+			foreach ($config['servers'] as $serverUrl){
+				$this->swagger->addServer(new Server($serverUrl,''));
 			}
 		}
 	}
@@ -69,17 +74,15 @@ class SwaggerService
 			$parameters[] = new Parameter($key, $headerParam[0], '', 'header');
 		}
 		$operationName = strtolower($event->getRequest()->getMethod());
-		$path->{$operationName} = new Operation($pathAnnotation->summary, $pathAnnotation->description, $parameters);
+		$path->setOperation($operationName, new Operation($pathAnnotation->summary, $pathAnnotation->description, $parameters));
 		if(!empty($pathAnnotation->model)) {
 			$model = $pathAnnotation->model;
 			$reflect = new ReflectionClass($model);
 			$modelName = $reflect->getShortName();
 			$schema = $this->createSchemaFromModel($model, json_decode($event->getRequest()->getContent()));
-			$path->{$operationName}->requestBody = new StdClass();
-			$path->{$operationName}->requestBody->content = new StdClass();
-			$path->{$operationName}->requestBody->content->{$contentType} = new StdClass();
-			$path->{$operationName}->requestBody->content->{$contentType}->schema = new StdClass();
-			$path->{$operationName}->requestBody->content->{$contentType}->schema->{'$ref'} = sprintf('#/components/schemas/%s', $modelName);
+			$path->{$operationName}->addRequest();
+			$path->{$operationName}->requestBody->content->addContentType($contentType);
+			$path->{$operationName}->requestBody->content->{$contentType}->schema->setReference(sprintf('#/components/schemas/%s', $modelName));
 			$this->swagger->components->schemas->{$modelName} = $schema;
 		}
 		$this->swagger->addPath($pathName, $path);
@@ -100,57 +103,18 @@ class SwaggerService
 			}
 		}
 
-		$content->{$contentType} = new StdClass();
-		$content->{$contentType}->schema = new StdClass();
+		$content->addContentType($contentType);
 
 		if(isset($responseAnnotation->model)) {
 			$model = $responseAnnotation->model;
 			$reflect = new ReflectionClass($model);
 			$modelName = $reflect->getShortName();
 			$schema = $this->createSchemaFromModel($model, json_decode($event->getResponse()->getContent()));
-			$content->{$contentType}->schema->{'$ref'} = sprintf('#/components/schemas/%s', $modelName);
+			$content->{$contentType}->schema->setReference(sprintf('#/components/schemas/%s', $modelName));
 			$this->swagger->components->schemas->{$modelName} = $schema;
 		}
 		$response = new Response($responseAnnotation->description, $content);
 		$this->swagger->addResponse($pathName, $operationName, $responseName, $response);
-	}
-
-	private function createSchemaFromModel($model, $example = null)
-	{
-		$schema = new Schema();
-		$schema->type = 'object';
-		$schema->properties = $this->createObjectSchemaFromModel($model, $example);
-		return $schema;
-	}
-
-	private function createObjectSchemaFromModel($model, $example = null)
-	{
-		$result = new StdClass();
-		$reflectionClass = new ReflectionClass($model);
-		$properties = $reflectionClass->getProperties();
-		$reader = new AnnotationReader();
-		foreach ($properties as $prop) {
-			$result->{$prop->name} = new StdClass();
-			$annotations = $reader->getPropertyAnnotations($prop, 'JMS\Serializer\Annotation\Type');
-			foreach ($annotations as $annotation) {
-				$arrayType = $this->extractArrayType($annotation);
-				if ($arrayType) {
-					$result->{$prop->name}->type = 'array';
-					$result->{$prop->name}->items = $this->createSchemaFromModel($arrayType, $example->{$prop->name}[0]);
-				} else {
-					$result->{$prop->name}->type = $annotation->name;
-					$result->{$prop->name}->example = $example->{$prop->name};
-				}
-			}
-		}
-		return $result;
-	}
-
-	private function extractArrayType($annotation)
-	{
-		$matches = [];
-		preg_match('/Array.*<(.*)>/', $annotation->name, $matches);
-		return count($matches) > 1 ? $matches[1] : false;
 	}
 
 	public function terminate()
@@ -158,11 +122,31 @@ class SwaggerService
 		$this->outputToFile();
 	}
 
+	private function loadJson()
+	{
+		$jsonContent = '{}';
+		if(file_exists($this->jsonPath)){
+			$jsonContent = file_get_contents($this->jsonPath);
+		}
+		$this->swagger = SwaggerMapper::mapSwaggerJson(json_decode($jsonContent, false));
+	}
+
+	private function createSchemaFromModel(string $model, $example = null)
+	{
+		$schema = $this->modelDescriber->describe($model, $example);
+		return $schema;
+	}
+
 	private function outputToFile()
 	{
-		$json = json_encode($this->swagger, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+		$json =  $this->filterJson(json_encode($this->swagger, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 		$fp = fopen($this->jsonPath, 'w');
 		fwrite($fp, $json);
 		fclose($fp);
+	}
+
+	private function filterJson(string $json): string
+	{
+		return preg_replace('/[\r\n ]*,\s*"[^"]+":null|[\r\n ]*"[^"]+": ?null,?/', '', $json);
 	}
 }

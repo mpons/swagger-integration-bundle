@@ -44,4 +44,12 @@ class Operation
 		$this->responses = $responses ? $responses : new Responses();
 	}
 
+	public function addRequest()
+	{
+		if(empty($this->requestBody)) {
+			$this->requestBody = new StdClass();
+			$this->requestBody->content = new Content();
+		}
+	}
+
 }

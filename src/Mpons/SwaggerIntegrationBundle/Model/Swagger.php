@@ -75,4 +75,19 @@ class Swagger
 		}
 	}
 
+	public function addServer(Server $server)
+	{
+		$found = false;
+		foreach ($this->servers as &$serv){
+			if($serv->url == $server->url){
+				$found = true;
+				if($serv->description != $server->description){
+					$serv->description = $server->description;
+				}
+			}
+		}
+		if(!$found){
+			$this->servers[] = $server;
+		}
+	}
 }

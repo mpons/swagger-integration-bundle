@@ -21,10 +21,6 @@ class MponsSwaggerIntegrationExtension extends Extension
         $loader->load('services.xml');
 
 		$definition = $container->getDefinition('swagger_integration.swagger_service');
-		$definition->replaceArgument(0, $config['info']);
-		$definition->replaceArgument(1, $config['name']);
-		$definition->replaceArgument(2, $config['version']);
-		$definition->replaceArgument(3, $config['servers']);
-		$definition->replaceArgument(4, $config['json_path']);
+		$definition->replaceArgument(0, $config);
     }
 }
