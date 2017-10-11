@@ -132,10 +132,8 @@ class SwaggerIntegrationTestListener implements TestListener
 		}
 
 		$reflectionMethod = new ReflectionMethod($class, $method);
-		$pathAnnotation = $this->reader
-			->getMethodAnnotation($reflectionMethod, $this->endpointAnnotationClass);
-		$responseAnnotation = $this->reader
-			->getMethodAnnotation($reflectionMethod, $this->responseAnnotationClass);
+		$pathAnnotation = $this->reader->getMethodAnnotation($reflectionMethod, $this->endpointAnnotationClass);
+		$responseAnnotation = $this->reader->getMethodAnnotation($reflectionMethod, $this->responseAnnotationClass);
 
 		if ($pathAnnotation) {
 			RequestListener::$path = $pathAnnotation;

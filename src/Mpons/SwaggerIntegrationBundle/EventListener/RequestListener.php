@@ -47,7 +47,7 @@ class RequestListener
 		}
 	}
 
-    public function terminate()
+    public static function terminate()
 	{
 		if(!empty(self::$swagger)) {
 			self::$swagger->terminate();

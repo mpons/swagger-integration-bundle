@@ -2,17 +2,24 @@
 
 namespace Mpons\SwaggerIntegrationBundle\Model;
 
+use stdClass;
+
 class Path
 {
 
-	/**
-	 * @return bool|string
-	 */
-	public function hasOperation(string $operationName)
+	public function hasOperation(string $operationName): bool
 	{
 		return isset($this->{$operationName});
 	}
-	public function addOperation(string $operationName, Operation $operation){
+
+	public function addOperation(string $operationName)
+	{
+		if(!$this->hasOperation($operationName)) {
+			$this->{$operationName} = new StdClass();
+		}
+	}
+	public function setOperation(string $operationName, Operation $operation)
+	{
 		$this->{$operationName} = $operation;
 	}
 }

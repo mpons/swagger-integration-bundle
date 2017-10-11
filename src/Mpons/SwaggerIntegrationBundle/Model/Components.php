@@ -21,4 +21,9 @@ class Components
 		$this->schemas = new StdClass();
 		$this->securitySchemes = new StdClass();
 	}
+
+	public function addSchema()
+	{
+
+	}
 }

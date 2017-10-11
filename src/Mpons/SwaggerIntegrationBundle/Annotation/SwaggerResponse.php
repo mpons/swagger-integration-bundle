@@ -7,7 +7,13 @@ namespace Mpons\SwaggerIntegrationBundle\Annotation;
  */
 class SwaggerResponse
 {
+	/**
+	 * @var string
+	 */
 	public $description;
 
+	/**
+	 * @var string
+	 */
 	public $model;
 }
