@@ -39,6 +39,16 @@ class SwaggerService
 	 */
 	private $modelDescriber;
 
+	/**
+	 * @var array
+	 */
+	private $includeHeaders;
+
+	/**
+	 * @var array
+	 */
+	private $excludeHeaders;
+
 	public function __construct(
 		array $config,
 		ModelDescriberInterface $modelDescriber
@@ -54,10 +64,22 @@ class SwaggerService
 		$this->swagger->info->description = $config['info'];
 		$this->swagger->info->version = $config['version'];
 		if(!empty($config['servers'])){
-			foreach ($config['servers'] as $serverUrl){
-				$this->swagger->addServer(new Server($serverUrl,''));
+			foreach ($config['servers'] as $server){
+				$this->swagger->addServer(new Server($server['url'],$server['description']));
 			}
 		}
+		$this->includeHeaders = [];
+		$this->excludeHeaders = [];
+	}
+
+	public function setIncludeHeaders(array $headerNames)
+	{
+		$this->includeHeaders = $headerNames;
+	}
+
+	public function setExcludeHeaders(array $headerNames)
+	{
+		$this->excludeHeaders = $headerNames;
 	}
 
 	public function addPath(GetResponseEvent $event, SwaggerRequest $pathAnnotation)
@@ -71,7 +93,9 @@ class SwaggerService
 			if ($key == 'content-type') {
 				$contentType = $headerParam[0];
 			}
-			$parameters[] = new Parameter($key, $headerParam[0], '', 'header');
+			if($this->isHeaderAllowed($key)) {
+				$parameters[] = new Parameter($key, $headerParam[0], '', 'header');
+			}
 		}
 		$operationName = strtolower($event->getRequest()->getMethod());
 		$path->setOperation($operationName, new Operation($pathAnnotation->summary, $pathAnnotation->description, $parameters));
@@ -80,10 +104,10 @@ class SwaggerService
 			$reflect = new ReflectionClass($model);
 			$modelName = $reflect->getShortName();
 			$schema = $this->createSchemaFromModel($model, json_decode($event->getRequest()->getContent()));
-			$path->{$operationName}->addRequest();
-			$path->{$operationName}->requestBody->content->addContentType($contentType);
-			$path->{$operationName}->requestBody->content->{$contentType}->schema->setReference(sprintf('#/components/schemas/%s', $modelName));
-			$this->swagger->components->schemas->{$modelName} = $schema;
+			$path->getOperation($operationName)->addRequest();
+			$path->getOperation($operationName)->requestBody->content->addContentType($contentType);
+			$path->getOperation($operationName)->requestBody->content->getContentType($contentType)->schema->setReference(sprintf('#/components/schemas/%s', $modelName));
+			$this->swagger->components->schemas->addSchema($modelName,$schema);
 		}
 		$this->swagger->addPath($pathName, $path);
 	}
@@ -100,6 +124,7 @@ class SwaggerService
 		foreach ($headers as $key => $headerParam) {
 			if ($key == 'content-type') {
 				$contentType = $headerParam[0];
+				break;
 			}
 		}
 
@@ -110,8 +135,8 @@ class SwaggerService
 			$reflect = new ReflectionClass($model);
 			$modelName = $reflect->getShortName();
 			$schema = $this->createSchemaFromModel($model, json_decode($event->getResponse()->getContent()));
-			$content->{$contentType}->schema->setReference(sprintf('#/components/schemas/%s', $modelName));
-			$this->swagger->components->schemas->{$modelName} = $schema;
+			$content->getContentType($contentType)->schema->setReference(sprintf('#/components/schemas/%s', $modelName));
+			$this->swagger->components->schemas->addSchema($modelName,$schema);
 		}
 		$response = new Response($responseAnnotation->description, $content);
 		$this->swagger->addResponse($pathName, $operationName, $responseName, $response);
@@ -128,7 +153,17 @@ class SwaggerService
 		if(file_exists($this->jsonPath)){
 			$jsonContent = file_get_contents($this->jsonPath);
 		}
+		$content = json_decode($jsonContent, false);
 		$this->swagger = SwaggerMapper::mapSwaggerJson(json_decode($jsonContent, false));
+	}
+
+	private function isHeaderAllowed(string $headerName)
+	{
+		$isIn = false;
+		if(!empty($this->includeHeaders)){
+			$isIn = in_array($headerName, $this->includeHeaders);
+		}
+		return $isIn && !in_array($headerName, $this->excludeHeaders);
 	}
 
 	private function createSchemaFromModel(string $model, $example = null)
@@ -147,6 +182,6 @@ class SwaggerService
 
 	private function filterJson(string $json): string
 	{
-		return preg_replace('/[\r\n ]*,\s*"[^"]+":null|[\r\n ]*"[^"]+": ?null,?/', '', $json);
+		return preg_replace('/[\r\n ]*,\s*"[^"]+": ?null|[\r\n ]*"[^"]+": ?null,?/', '', $json);
 	}
 }

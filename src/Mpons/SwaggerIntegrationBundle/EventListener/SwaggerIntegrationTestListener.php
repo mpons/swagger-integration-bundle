@@ -3,6 +3,8 @@
 namespace Mpons\SwaggerIntegrationBundle\EventListener;
 
 use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\DocParser;
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerHeaders;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
 use PHPUnit\Exception;
@@ -12,6 +14,7 @@ use PHPUnit\Framework\TestListener;
 use PHPUnit\Framework\TestSuite;
 use PHPUnit\Framework\Warning;
 use ReflectionMethod;
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 class SwaggerIntegrationTestListener implements TestListener
 {
@@ -34,6 +37,7 @@ class SwaggerIntegrationTestListener implements TestListener
 
 	protected $endpointAnnotationClass = SwaggerRequest::class;
 	protected $responseAnnotationClass = SwaggerResponse::class;
+	protected $headersAnnotationClass = SwaggerHeaders::class;
 
 	/**
 	 * Constructor.
@@ -42,10 +46,60 @@ class SwaggerIntegrationTestListener implements TestListener
 	 */
 	public function __construct(array $options = array())
 	{
-		$this->reader = new AnnotationReader();
-		$this->reader->addGlobalIgnoredName('vcr');
-		$this->reader->addGlobalIgnoredName('test');
-		$this->reader->addGlobalIgnoredName('expectedException');
+		$parser = new DocParser();
+		$parser->setIgnoreNotImportedAnnotations(true);
+		$this->reader = new AnnotationReader($parser);
+	}
+
+	/**
+	 * A test started.
+	 *
+	 * @return bool|null
+	 */
+	public function startTest(Test $test)
+	{
+		$class = get_class($test);
+		$method = $test->getName(false);
+		$language = new ExpressionLanguage();
+
+		if (!method_exists($class, $method)) {
+			return;
+		}
+
+		$reflectionMethod = new ReflectionMethod($class, $method);
+		$pathAnnotation = $this->reader->getMethodAnnotation($reflectionMethod, $this->endpointAnnotationClass);
+		$responseAnnotation = $this->reader->getMethodAnnotation($reflectionMethod, $this->responseAnnotationClass);
+		$headersAnnotation = $this->reader->getMethodAnnotation($reflectionMethod, $this->headersAnnotationClass);
+
+		if ($pathAnnotation) {
+			RequestListener::$path = $pathAnnotation;
+		}
+		if ($responseAnnotation) {
+			RequestListener::$response = $responseAnnotation;
+		}
+		if ($headersAnnotation) {
+			if(!empty($headersAnnotation->include)) {
+				$headersAnnotation->include = $language->evaluate($headersAnnotation->include);
+			}
+			if(!empty($headersAnnotation->exclude)) {
+				$headersAnnotation->exclude = $language->evaluate($headersAnnotation->exclude);
+			}
+			RequestListener::$headers = $headersAnnotation;
+		}
+	}
+
+	public function endTest(Test $test, $time)
+	{
+
+	}
+
+	public function startTestSuite(TestSuite $suite)
+	{
+	}
+
+	public function endTestSuite(TestSuite $suite)
+	{
+		RequestListener::terminate();
 	}
 
 	/**
@@ -117,43 +171,4 @@ class SwaggerIntegrationTestListener implements TestListener
 
 	}
 
-	/**
-	 * A test started.
-	 *
-	 * @return bool|null
-	 */
-	public function startTest(Test $test)
-	{
-		$class = get_class($test);
-		$method = $test->getName(false);
-
-		if (!method_exists($class, $method)) {
-			return;
-		}
-
-		$reflectionMethod = new ReflectionMethod($class, $method);
-		$pathAnnotation = $this->reader->getMethodAnnotation($reflectionMethod, $this->endpointAnnotationClass);
-		$responseAnnotation = $this->reader->getMethodAnnotation($reflectionMethod, $this->responseAnnotationClass);
-
-		if ($pathAnnotation) {
-			RequestListener::$path = $pathAnnotation;
-		}
-		if ($responseAnnotation) {
-			RequestListener::$response = $responseAnnotation;
-		}
-	}
-
-	public function endTest(Test $test, $time)
-	{
-
-	}
-
-	public function startTestSuite(TestSuite $suite)
-	{
-	}
-
-	public function endTestSuite(TestSuite $suite)
-	{
-		RequestListener::terminate();
-	}
 }

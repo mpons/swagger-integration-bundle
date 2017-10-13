@@ -8,33 +8,29 @@ use stdClass;
 class Operation
 {
     /**
-     * @Type("string")
-     *
      * @var string
      */
     public $summary;
 
     /**
-     * @Type("string")
-     *
      * @var string
      */
     public $description;
 
     /**
-     * @Type("array<Mpons\SwaggerIntegrationBundle\Model\Parameter>")
-     *
      * @var array
      */
     public $parameters;
 
     /**
-     * @Type("Mpons\SwaggerIntegrationBundle\Model\Responses")
-     *
      * @var Responses
      */
     public $responses;
 
+	/**
+	 * @var
+	 */
+    public $requestBody;
 
 	public function __construct(string $summary = '', string $description = '', array $parameters = [], Responses $responses = null)
 	{
@@ -50,6 +46,11 @@ class Operation
 			$this->requestBody = new StdClass();
 			$this->requestBody->content = new Content();
 		}
+	}
+
+	public function getRequestBody()
+	{
+		return $this->requestBody;
 	}
 
 }
