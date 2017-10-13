@@ -2,6 +2,7 @@
 
 namespace Mpons\SwaggerIntegrationBundle\EventListener;
 
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerHeaders;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
 use Mpons\SwaggerIntegrationBundle\Service\SwaggerService;
@@ -18,6 +19,10 @@ class RequestListener
 	 * @var SwaggerResponse
 	 */
 	public static $response = null;
+	/**
+	 * @var SwaggerHeaders
+	 */
+	public static $headers = null;
 
 	/**
 	 * @var SwaggerService
@@ -34,6 +39,10 @@ class RequestListener
 	public function onKernelRequest(GetResponseEvent $event)
     {
         if(self::$path && $event->isMasterRequest()) {
+		if(self::$headers){
+				self::$swagger->setIncludeHeaders(self::$headers->include ?? []);
+				self::$swagger->setExcludeHeaders(self::$headers->exclude ?? []);
+			}
 			self::$swagger->addPath($event, self::$path);
 			self::$path = null;
         }

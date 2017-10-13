@@ -49,7 +49,7 @@ class SwaggerMapper
 			foreach ($jsonPaths as $pathName => $operations){
 				$path = new Path();
 				self::mapOperations($path, $operations);
-				$swagger->paths->{$pathName} = $path;
+				$swagger->paths->addPath($pathName, $path);
 			}
 		}
 	}
@@ -65,11 +65,15 @@ class SwaggerMapper
 			if(isset($attributes->parameters)) {
 				$parameters = self::mapParameters($attributes->parameters);
 			}
-			$path->{$operationName} = new Operation(
-				isset($attributes->summary) ? $attributes->summary : '',
-				isset($attributes->description) ? $attributes->description : '',
-				$parameters,
-				$responses);
+			$path->setOperation(
+				$operationName,
+				new Operation(
+					$attributes->summary ?? '',
+					$attributes->description ?? '',
+					$parameters,
+					$responses
+				)
+			);
 		}
 	}
 
@@ -80,16 +84,19 @@ class SwaggerMapper
 			if(isset($attributes->content)) {
 				self::mapContent($content, $attributes->content);
 			}
-			$responses->{$responseCode} = new Response(
-				isset($attributes->description) ? $attributes->description : '',
-				$content
-				);
+			$responses->addResponse(
+				$responseCode,
+				new Response(
+					isset($attributes->description) ? $attributes->description : '',
+					$content
+				)
+			);
 		}
 	}
 	private static function mapContent(Content $content, stdClass $jsonContent)
 	{
 		foreach ($jsonContent as $contentType => $contentContent){
-			$content->{$contentType} = $contentContent;
+			$content->setContentType($contentType, $contentContent);
 		}
 	}
 	private static function mapParameters(array $jsonParameters): array

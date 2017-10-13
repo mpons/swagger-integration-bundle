@@ -13,4 +13,12 @@ class Content
 			$this->{$contentType}->schema = new Schema();
 		}
 	}
+	public function setContentType(string $contentType, stdClass $content)
+	{
+		$this->{$contentType} = $content;
+	}
+	public function getContentType(string $contentType)
+	{
+		return $this->{$contentType};
+	}
 }

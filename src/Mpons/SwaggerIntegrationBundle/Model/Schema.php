@@ -2,8 +2,6 @@
 
 namespace Mpons\SwaggerIntegrationBundle\Model;
 
-use stdClass;
-
 class Schema
 {
 	/**

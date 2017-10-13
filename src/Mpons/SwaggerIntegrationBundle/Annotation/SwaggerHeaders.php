@@ -5,20 +5,15 @@ namespace Mpons\SwaggerIntegrationBundle\Annotation;
 /**
  * @Annotation
  */
-class SwaggerRequest
+class SwaggerHeaders
 {
 	/**
 	 * @var string
 	 */
-	public $description;
+	public $include;
 
 	/**
 	 * @var string
 	 */
-	public $summary;
-
-	/**
-	 * @var string
-	 */
-	public $model;
+	public $exclude;
 }

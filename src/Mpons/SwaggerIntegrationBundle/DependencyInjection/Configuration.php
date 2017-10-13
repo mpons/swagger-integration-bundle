@@ -26,7 +26,12 @@ class Configuration implements ConfigurationInterface
 				->scalarNode('name')->defaultValue('')->end()
 				->scalarNode('version')->defaultValue('0.0.1')->end()
 				->arrayNode('servers')
-					->prototype('scalar')->end()
+					->prototype('array')
+						->children()
+							->scalarNode('url')->end()
+							->scalarNode('description')->defaultValue('')->end()
+						->end()
+					->end()
 				->end()
 				->scalarNode('json_path')->end()
 			->end();

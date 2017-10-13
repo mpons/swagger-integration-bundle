@@ -14,12 +14,18 @@ class Path
 
 	public function addOperation(string $operationName)
 	{
-		if(!$this->hasOperation($operationName)) {
-			$this->{$operationName} = new StdClass();
+		if (!$this->hasOperation($operationName)) {
+			$this->{$operationName} = new Operation();
 		}
 	}
+
 	public function setOperation(string $operationName, Operation $operation)
 	{
 		$this->{$operationName} = $operation;
+	}
+
+	public function getOperation(string $operationName): Operation
+	{
+		return $this->{$operationName};
 	}
 }

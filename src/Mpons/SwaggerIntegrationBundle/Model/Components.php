@@ -12,18 +12,13 @@ class Components
     public $securitySchemes;
 
 	/**
-	 * @var stdClass
+	 * @var Schemas
 	 */
     public $schemas;
 
     public function __construct()
 	{
-		$this->schemas = new StdClass();
+		$this->schemas = new Schemas();
 		$this->securitySchemes = new StdClass();
-	}
-
-	public function addSchema()
-	{
-
 	}
 }
