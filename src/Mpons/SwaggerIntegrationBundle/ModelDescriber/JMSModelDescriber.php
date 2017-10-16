@@ -7,7 +7,6 @@ use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use Metadata\MetadataFactoryInterface;
 use Mpons\SwaggerIntegrationBundle\Model\Property;
 use Mpons\SwaggerIntegrationBundle\Model\Schema;
-use Nelmio\ApiDocBundle\Model\Model;
 
 /**
  * Uses the JMS metadata factory to extract input/output model information.
@@ -33,17 +32,16 @@ class JMSModelDescriber implements ModelDescriberInterface
 	/**
 	 * {@inheritdoc}
 	 */
-	public function describe(string $className, $example = null)
+	public function describe(string $className, $example = null): Schema
 	{
 		$schema = new Schema();
-		if(!class_exists($className)){
+		if (!class_exists($className)) {
 			$schema->setType($className);
 			return $schema;
 		}
 
 		$metadata = $this->factory->getMetadataForClass($className);
 		$schema->setType('object');
-
 
 		foreach ($metadata->propertyMetadata ?? [] as $item) {
 			if (null === $item->type) {

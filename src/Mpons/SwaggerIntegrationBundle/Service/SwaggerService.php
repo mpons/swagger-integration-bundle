@@ -153,17 +153,14 @@ class SwaggerService
 		if(file_exists($this->jsonPath)){
 			$jsonContent = file_get_contents($this->jsonPath);
 		}
-		$content = json_decode($jsonContent, false);
 		$this->swagger = SwaggerMapper::mapSwaggerJson(json_decode($jsonContent, false));
 	}
 
 	private function isHeaderAllowed(string $headerName)
 	{
-		$isIn = false;
-		if(!empty($this->includeHeaders)){
-			$isIn = in_array($headerName, $this->includeHeaders);
-		}
-		return $isIn && !in_array($headerName, $this->excludeHeaders);
+		$isIn = in_array($headerName, $this->includeHeaders) || empty($this->includeHeaders);
+		$isOut = in_array($headerName, $this->excludeHeaders);
+		return $isIn && !$isOut;
 	}
 
 	private function createSchemaFromModel(string $model, $example = null)
