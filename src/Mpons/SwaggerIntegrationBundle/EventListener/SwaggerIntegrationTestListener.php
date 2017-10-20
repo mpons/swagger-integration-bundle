@@ -7,7 +7,6 @@ use Doctrine\Common\Annotations\DocParser;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerHeaders;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
-use PHPUnit\Exception;
 use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\Test;
 use PHPUnit\Framework\TestListener;
@@ -33,27 +32,37 @@ class SwaggerIntegrationTestListener implements TestListener
 	 */
 	protected $suites = 0;
 
+	/**
+	 * @var AnnotationReader
+	 */
 	protected $reader;
 
-	protected $endpointAnnotationClass = SwaggerRequest::class;
-	protected $responseAnnotationClass = SwaggerResponse::class;
-	protected $headersAnnotationClass = SwaggerHeaders::class;
+	/**
+	 * @var string
+	 */
+	protected $endpointAnnotationClass;
 
 	/**
-	 * Constructor.
-	 *
-	 * @param array $options
+	 * @var string
 	 */
+	protected $responseAnnotationClass;
+    
+	/**
+	 * @var string
+	 */
+	protected $headersAnnotationClass;
+
 	public function __construct(array $options = array())
 	{
 		$parser = new DocParser();
 		$parser->setIgnoreNotImportedAnnotations(true);
 		$this->reader = new AnnotationReader($parser);
+		$this->endpointAnnotationClass = SwaggerRequest::class;
+		$this->responseAnnotationClass = SwaggerResponse::class;
+		$this->headersAnnotationClass = SwaggerHeaders::class;
 	}
 
 	/**
-	 * A test started.
-	 *
 	 * @return bool|null
 	 */
 	public function startTest(Test $test)
@@ -78,23 +87,14 @@ class SwaggerIntegrationTestListener implements TestListener
 			RequestListener::$response = $responseAnnotation;
 		}
 		if ($headersAnnotation) {
-			if(!empty($headersAnnotation->include)) {
+			if (!empty($headersAnnotation->include)) {
 				$headersAnnotation->include = $language->evaluate($headersAnnotation->include);
 			}
-			if(!empty($headersAnnotation->exclude)) {
+			if (!empty($headersAnnotation->exclude)) {
 				$headersAnnotation->exclude = $language->evaluate($headersAnnotation->exclude);
 			}
 			RequestListener::$headers = $headersAnnotation;
 		}
-	}
-
-	public function endTest(Test $test, $time)
-	{
-
-	}
-
-	public function startTestSuite(TestSuite $suite)
-	{
 	}
 
 	public function endTestSuite(TestSuite $suite)
@@ -102,73 +102,36 @@ class SwaggerIntegrationTestListener implements TestListener
 		RequestListener::terminate();
 	}
 
-	/**
-	 * An error occurred.
-	 *
-	 * @param PHPUnit_Framework_Test $test
-	 * @param Exception $e
-	 * @param float $time
-	 */
+	public function endTest(Test $test, $time)
+	{
+	}
+
+	public function startTestSuite(TestSuite $suite)
+	{
+	}
+
 	public function addError(Test $test, \Exception $e, $time)
 	{
 	}
 
-	/**
-	 * A warning occurred.
-	 *
-	 * @param PHPUnit_Framework_Test $test
-	 * @param PHPUnit_Framework_Warning $e
-	 * @param float $time
-	 *
-	 * @since Method available since Release 5.1.0
-	 */
 	public function addWarning(Test $test, Warning $e, $time)
 	{
 	}
 
-	/**
-	 * A failure occurred.
-	 *
-	 * @param PHPUnit_Framework_Test $test
-	 * @param PHPUnit_Framework_AssertionFailedError $e
-	 * @param float $time
-	 */
 	public function addFailure(Test $test, AssertionFailedError $e, $time)
 	{
 	}
 
-	/**
-	 * Incomplete test.
-	 *
-	 * @param PHPUnit_Framework_Test $test
-	 * @param Exception $e
-	 * @param float $time
-	 */
 	public function addIncompleteTest(Test $test, \Exception $e, $time)
 	{
 	}
 
-	/**
-	 * Skipped test.
-	 *
-	 * @param PHPUnit_Framework_Test $test
-	 * @param Exception $e
-	 * @param float $time
-	 */
 	public function addSkippedTest(Test $test, \Exception $e, $time)
 	{
 	}
 
-	/**
-	 * Risky test.
-	 *
-	 * @param PHPUnit_Framework_Test $test
-	 * @param Exception $e
-	 * @param float $time
-	 */
 	public function addRiskyTest(Test $test, \Exception $e, $time)
 	{
-
 	}
 
 }

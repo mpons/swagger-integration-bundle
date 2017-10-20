@@ -34,6 +34,11 @@ class Configuration implements ConfigurationInterface
 					->end()
 				->end()
 				->scalarNode('json_path')->end()
+				->arrayNode('headers')
+					->prototype('array')
+						->treatNullLike([])->prototype('scalar')->end()
+					->end()
+				->end()
 			->end();
 		return $treeBuilder;
 	}

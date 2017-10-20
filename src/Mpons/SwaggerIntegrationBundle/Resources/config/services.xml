@@ -6,14 +6,24 @@
 	<services>
 
 		<service class="Mpons\SwaggerIntegrationBundle\EventListener\RequestListener">
-			<argument id="swagger_integration.swagger_service" type="service"/>
+			<argument id="Mpons\SwaggerIntegrationBundle\Service\SwaggerService" type="service"/>
 			<tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest"/>
 			<tag name="kernel.event_listener" event="kernel.response" method="onKernelResponse"/>
 		</service>
 
-		<service class="Mpons\SwaggerIntegrationBundle\Service\SwaggerService" id="swagger_integration.swagger_service">
+		<service class="Mpons\SwaggerIntegrationBundle\Service\SwaggerService" id="Mpons\SwaggerIntegrationBundle\Service\SwaggerService">
 			<argument/> <!-- config -->
+			<argument type="service" id="Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper"/>
+			<argument type="service" id="Mpons\SwaggerIntegrationBundle\Mapper\EventMapper"/>
+		</service>
+
+		<service class="Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper" id="Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper">
 			<argument type="service" id="Mpons\SwaggerIntegrationBundle\ModelDescriber\JMSModelDescriber"/>
+		</service>
+
+		<service class="Mpons\SwaggerIntegrationBundle\Mapper\EventMapper" id="Mpons\SwaggerIntegrationBundle\Mapper\EventMapper">
+			<argument /> <!-- includeHeaders -->
+			<argument /> <!-- excludeHeaderss -->
 		</service>
 
 		<service class="Mpons\SwaggerIntegrationBundle\ModelDescriber\JMSModelDescriber" id="Mpons\SwaggerIntegrationBundle\ModelDescriber\JMSModelDescriber">

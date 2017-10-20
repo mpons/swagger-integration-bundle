@@ -5,8 +5,8 @@ namespace Mpons\SwaggerIntegrationBundle\ModelDescriber;
 use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use Metadata\MetadataFactoryInterface;
-use Mpons\SwaggerIntegrationBundle\Model\Property;
-use Mpons\SwaggerIntegrationBundle\Model\Schema;
+use Mpons\SwaggerIntegrationBundle\Model\Swagger\Property;
+use Mpons\SwaggerIntegrationBundle\Model\Swagger\Schema;
 
 /**
  * Uses the JMS metadata factory to extract input/output model information.
@@ -85,7 +85,7 @@ class JMSModelDescriber implements ModelDescriberInterface
 		$property->setFormat($propertyFormat);
 
 		if (in_array($propertyType, ['number', 'string', 'boolean', 'integer'])) {
-			$property->setExample($example);
+			$property->setExample($example ?? '');
 			return $property;
 		} elseif ($propertyType == 'array') {
 			$subSchema = $this->describe($propertySubType, $example ? $example[0] : null);

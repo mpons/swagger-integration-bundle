@@ -1,6 +1,6 @@
 <?php
 
-namespace Mpons\SwaggerIntegrationBundle\Model;
+namespace Mpons\SwaggerIntegrationBundle\Model\Swagger;
 
 class Schemas
 {

@@ -2,20 +2,15 @@
 
 namespace Mpons\SwaggerIntegrationBundle\Service;
 
-
-use Doctrine\Common\Annotations\AnnotationReader;
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerHeaders;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
+use Mpons\SwaggerIntegrationBundle\Mapper\EventMapper;
 use Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper;
-use Mpons\SwaggerIntegrationBundle\Model\Content;
-use Mpons\SwaggerIntegrationBundle\Model\Operation;
-use Mpons\SwaggerIntegrationBundle\Model\Parameter;
-use Mpons\SwaggerIntegrationBundle\Model\Path;
-use Mpons\SwaggerIntegrationBundle\Model\Response;
-use Mpons\SwaggerIntegrationBundle\Model\Schema;
-use Mpons\SwaggerIntegrationBundle\Model\Server;
-use Mpons\SwaggerIntegrationBundle\Model\Swagger;
-use Mpons\SwaggerIntegrationBundle\ModelDescriber\ModelDescriberInterface;
+use Mpons\SwaggerIntegrationBundle\Model\Event;
+use Mpons\SwaggerIntegrationBundle\Model\Swagger\Content;
+use Mpons\SwaggerIntegrationBundle\Model\Swagger\Response;
+use Mpons\SwaggerIntegrationBundle\Model\Swagger\Swagger;
 use ReflectionClass;
 use stdClass;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException;
@@ -35,144 +30,93 @@ class SwaggerService
 	private $jsonPath;
 
 	/**
-	 * @var ModelDescriberInterface
+	 * @var SwaggerMapper
 	 */
-	private $modelDescriber;
+	private $swaggerMapper;
 
 	/**
-	 * @var array
+	 * @var EventMapper
 	 */
-	private $includeHeaders;
-
-	/**
-	 * @var array
-	 */
-	private $excludeHeaders;
+	private $eventMapper;
 
 	public function __construct(
 		array $config,
-		ModelDescriberInterface $modelDescriber
+		SwaggerMapper $swaggerMapper,
+		EventMapper $eventMapper
 	)
 	{
-		$this->modelDescriber = $modelDescriber;
-		if(empty($config['json_path'])){
+		$this->swaggerMapper = $swaggerMapper;
+		$this->eventMapper = $eventMapper;
+
+		if (empty($config['json_path'])) {
 			throw new RuntimeException('Defining a path for the json to load/output is required. Aborting.');
 		}
 		$this->jsonPath = $config['json_path'];
-		$this->loadJson();
-		$this->swagger->info->title = $config['name'];
-		$this->swagger->info->description = $config['info'];
-		$this->swagger->info->version = $config['version'];
-		if(!empty($config['servers'])){
-			foreach ($config['servers'] as $server){
-				$this->swagger->addServer(new Server($server['url'],$server['description']));
-			}
-		}
-		$this->includeHeaders = [];
-		$this->excludeHeaders = [];
+		$this->swagger = $this->swaggerMapper->mapJson($this->loadJson($this->jsonPath));
+		$this->swaggerMapper->mapConfig($config, $this->swagger);
 	}
 
-	public function setIncludeHeaders(array $headerNames)
+	public function addPath(GetResponseEvent $event, SwaggerRequest $pathAnnotation, SwaggerHeaders $headersAnnotation)
 	{
-		$this->includeHeaders = $headerNames;
-	}
-
-	public function setExcludeHeaders(array $headerNames)
-	{
-		$this->excludeHeaders = $headerNames;
-	}
-
-	public function addPath(GetResponseEvent $event, SwaggerRequest $pathAnnotation)
-	{
-		$path = new Path();
-		$pathName = $event->getRequest()->getPathInfo();
-		$headers = $event->getRequest()->headers->getIterator();
-		$parameters = [];
-		$contentType = 'application/json';
-		foreach ($headers as $key => $headerParam) {
-			if ($key == 'content-type') {
-				$contentType = $headerParam[0];
-			}
-			if($this->isHeaderAllowed($key)) {
-				$parameters[] = new Parameter($key, $headerParam[0], '', 'header');
-			}
+		$this->eventMapper->setIncludeHeaders($headersAnnotation->include);
+		$this->eventMapper->setExcludeHeaders($headersAnnotation->exclude);
+		$mappedEvent = $this->eventMapper->mapEvent($event);
+		$path = $this->eventMapper->mapRequest($mappedEvent);
+		if (!empty($pathAnnotation->model)) {
+			$this->createSchemaReference($pathAnnotation->model, $path->getOperation($mappedEvent->operationName)->requestBody->content, $mappedEvent);
 		}
-		$operationName = strtolower($event->getRequest()->getMethod());
-		$path->setOperation($operationName, new Operation($pathAnnotation->summary, $pathAnnotation->description, $parameters));
-		if(!empty($pathAnnotation->model)) {
-			$model = $pathAnnotation->model;
-			$reflect = new ReflectionClass($model);
-			$modelName = $reflect->getShortName();
-			$schema = $this->createSchemaFromModel($model, json_decode($event->getRequest()->getContent()));
-			$path->getOperation($operationName)->addRequest();
-			$path->getOperation($operationName)->requestBody->content->addContentType($contentType);
-			$path->getOperation($operationName)->requestBody->content->getContentType($contentType)->schema->setReference(sprintf('#/components/schemas/%s', $modelName));
-			$this->swagger->components->schemas->addSchema($modelName,$schema);
-		}
-		$this->swagger->addPath($pathName, $path);
+		$this->swagger->addPath($mappedEvent->pathName, $path);
 	}
 
 	public function addResponse(FilterResponseEvent $event, SwaggerResponse $responseAnnotation)
 	{
+		$mappedEvent = $this->eventMapper->mapEvent($event);
+		$content = $this->eventMapper->mapResponse($mappedEvent);
 
-		$pathName = $event->getRequest()->getPathInfo();
-		$operationName = strtolower($event->getRequest()->getMethod());
-		$responseName = $event->getResponse()->getStatusCode();
-		$content = new Content();
-		$headers = $event->getResponse()->headers->getIterator();
-		$contentType = 'application/json';
-		foreach ($headers as $key => $headerParam) {
-			if ($key == 'content-type') {
-				$contentType = $headerParam[0];
-				break;
-			}
-		}
-
-		$content->addContentType($contentType);
-
-		if(isset($responseAnnotation->model)) {
-			$model = $responseAnnotation->model;
-			$reflect = new ReflectionClass($model);
-			$modelName = $reflect->getShortName();
-			$schema = $this->createSchemaFromModel($model, json_decode($event->getResponse()->getContent()));
-			$content->getContentType($contentType)->schema->setReference(sprintf('#/components/schemas/%s', $modelName));
-			$this->swagger->components->schemas->addSchema($modelName,$schema);
+		if (isset($responseAnnotation->model)) {
+			$this->createSchemaReference($responseAnnotation->model, $content, $mappedEvent);
 		}
 		$response = new Response($responseAnnotation->description, $content);
-		$this->swagger->addResponse($pathName, $operationName, $responseName, $response);
+		$this->swagger->addResponse(
+			$mappedEvent->pathName,
+			$mappedEvent->operationName,
+			$mappedEvent->responseName,
+			$response
+		);
 	}
 
 	public function terminate()
 	{
-		$this->outputToFile();
+		$this->outputToFile($this->swagger, $this->jsonPath);
 	}
 
-	private function loadJson()
+	private function createSchemaReference(string $model, Content $content, Event $mappedEvent)
 	{
-		$jsonContent = '{}';
-		if(file_exists($this->jsonPath)){
-			$jsonContent = file_get_contents($this->jsonPath);
+		$reflect = new ReflectionClass($model);
+		$modelName = $reflect->getShortName();
+		$schema = $this->swaggerMapper->mapSchemaFromModel($model, $mappedEvent->content);
+
+		$content
+			->getContentType($mappedEvent->contentType)
+			->schema->setReference(sprintf('#/components/schemas/%s', $modelName));
+		$this->swagger->components->schemas->addSchema($modelName, $schema);
+	}
+
+	private function loadJson(string $jsonPath): stdClass
+	{
+		if (file_exists($jsonPath)) {
+			$jsonContent = file_get_contents($jsonPath);
 		}
-		$this->swagger = SwaggerMapper::mapSwaggerJson(json_decode($jsonContent, false));
+		if(empty($jsonContent)){
+			$jsonContent = '{}';
+		}
+		return json_decode($jsonContent, false);
 	}
 
-	private function isHeaderAllowed(string $headerName)
+	private function outputToFile(Swagger $swaggerModel, string $jsonPath)
 	{
-		$isIn = in_array($headerName, $this->includeHeaders) || empty($this->includeHeaders);
-		$isOut = in_array($headerName, $this->excludeHeaders);
-		return $isIn && !$isOut;
-	}
-
-	private function createSchemaFromModel(string $model, $example = null)
-	{
-		$schema = $this->modelDescriber->describe($model, $example);
-		return $schema;
-	}
-
-	private function outputToFile()
-	{
-		$json =  $this->filterJson(json_encode($this->swagger, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-		$fp = fopen($this->jsonPath, 'w');
+		$json = $this->filterJson(json_encode($swaggerModel, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+		$fp = fopen($jsonPath, 'w');
 		fwrite($fp, $json);
 		fclose($fp);
 	}
