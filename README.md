@@ -9,16 +9,16 @@ Automatically generate [Swagger](http://swagger.io) documentation from integrati
      *
      * @SwaggerRequest(description="test description", summary="test summary")
      * @SwaggerResponse(description="test response 200", model="Acme\Bundle\AppBundle\Model\TestModelDto")
-     * @SwaggerHeaders(include="['x-app-build-version', 'x-app-platform', 'authorization']")
+     * @SwaggerHeaders(include="['x-build-version', 'x-platform', 'authorization']")
      */
-    public function get_mobile_campaigns_should_result_in_correct_response()
+    public function get_demo-endpoint_should_result_in_correct_response()
     {
         $headers = [
             'HTTP_Content-Type' => 'application/json',
             'HTTP_Authorization' => '01234567-aaaa-4ccc-01234-abcdef123456',
         ];
 
-        $this->client->request('GET', '/test-endpoint', [], [], $headers);
+        $this->client->request('GET', '/demo-endpoint', [], [], $headers);
         $this->assertEquals(HTTP::OK, $this->client->getResponse()->getStatusCode());
     }
 ```
