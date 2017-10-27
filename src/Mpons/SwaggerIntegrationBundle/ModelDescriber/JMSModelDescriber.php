@@ -35,8 +35,9 @@ class JMSModelDescriber implements ModelDescriberInterface
 	public function describe(string $className, $example = null): Schema
 	{
 		$schema = new Schema();
-		if (!class_exists($className)) {
-			$schema->setType($className);
+		if (!class_exists($className) || $className == 'DateTime' || $className == 'DateTimeImmutable') {
+			list($type, $format) = $this->normalizeType($className);
+			$schema->setType($type);
 			return $schema;
 		}
 
@@ -104,6 +105,8 @@ class JMSModelDescriber implements ModelDescriberInterface
 			$propertyType = 'number';
 		} elseif ('bool' === $propertyType) {
 			$propertyType = 'boolean';
+		} elseif ('int' === $propertyType) {
+			$propertyType = 'integer';
 		} elseif ('DateTime' === $propertyType || 'DateTimeImmutable' === $propertyType) {
 			$propertyType = 'string';
 			$propertyFormat = 'date-time';
