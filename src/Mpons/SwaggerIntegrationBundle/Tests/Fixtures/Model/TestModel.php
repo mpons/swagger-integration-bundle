@@ -14,7 +14,7 @@ class TestModel
 	public $testStringProperty;
 
 	/**
-	 * @Serializer\Type("int")
+	 * @Serializer\Type("integer")
 	 *
 	 * @var int
 	 */

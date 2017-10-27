@@ -22,7 +22,7 @@ class SwaggerService
 	/**
 	 * @var Swagger
 	 */
-	private $swagger;
+	public $swagger;
 
 	/**
 	 * @var string
