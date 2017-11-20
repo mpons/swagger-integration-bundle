@@ -2,11 +2,8 @@
 
 namespace Mpons\SwaggerIntegrationBundle\Model\Swagger;
 
-use stdClass;
-
 class Path
 {
-
 	public function hasOperation(string $operationName): bool
 	{
 		return isset($this->{$operationName});

@@ -88,10 +88,10 @@ class SwaggerIntegrationTestListener implements TestListener
 		}
 		if ($headersAnnotation) {
 			if (!empty($headersAnnotation->include)) {
-				$headersAnnotation->include = $language->evaluate($headersAnnotation->include);
+				$headersAnnotation->setIncludes($language->evaluate($headersAnnotation->include));
 			}
 			if (!empty($headersAnnotation->exclude)) {
-				$headersAnnotation->exclude = $language->evaluate($headersAnnotation->exclude);
+				$headersAnnotation->setExluces($language->evaluate($headersAnnotation->exclude));
 			}
 			RequestListener::$headers = $headersAnnotation;
 		}

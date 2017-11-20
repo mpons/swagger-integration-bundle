@@ -2,6 +2,9 @@
 
 namespace Mpons\SwaggerIntegrationBundle\Mapper;
 
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
+use Mpons\SwaggerIntegrationBundle\Model\Event;
 use Mpons\SwaggerIntegrationBundle\Model\Swagger\Content;
 use Mpons\SwaggerIntegrationBundle\Model\Swagger\Info;
 use Mpons\SwaggerIntegrationBundle\Model\Swagger\Operation;
@@ -12,6 +15,7 @@ use Mpons\SwaggerIntegrationBundle\Model\Swagger\Responses;
 use Mpons\SwaggerIntegrationBundle\Model\Swagger\Server;
 use Mpons\SwaggerIntegrationBundle\Model\Swagger\Swagger;
 use Mpons\SwaggerIntegrationBundle\ModelDescriber\ModelDescriberInterface;
+use ReflectionClass;
 use stdClass;
 
 class SwaggerMapper
@@ -21,14 +25,33 @@ class SwaggerMapper
 	 */
 	private $modelDescriber;
 
+	/**
+	 * @var Swagger
+	 */
+	public $swagger;
+
+	/**
+	 * @var PathMapper
+	 */
+	private $pathMapper;
+
+	/**
+	 * @var ResponseMapper
+	 */
+	private $responseMapper;
+
 	public function __construct(
-		ModelDescriberInterface $modelDescriber
+		ModelDescriberInterface $modelDescriber,
+		PathMapper $pathMapper,
+		ResponseMapper $responseMapper
 	)
 	{
 		$this->modelDescriber = $modelDescriber;
+		$this->pathMapper = $pathMapper;
+		$this->responseMapper = $responseMapper;
 	}
 
-	public function mapJson(stdClass $jsonContent): Swagger
+	public function mapJson(stdClass $jsonContent)
 	{
 		$title = '';
 		$description = '';
@@ -41,52 +64,80 @@ class SwaggerMapper
 		}
 
 		$info = new Info($title, $description, $version);
-		$swagger = new Swagger($info);
-		$swagger->openapi = isset($jsonContent->openapi) ? $jsonContent->openapi : '3.0.0';
-		$swagger->paths = new Paths();
+		if(!$this->swagger) {
+			$this->swagger = new Swagger($info);
+		} else {
+			$this->swagger->info = $info;
+		}
+
+		$this->swagger->openapi = isset($jsonContent->openapi) ? $jsonContent->openapi : '3.0.0';
+		$this->swagger->paths = new Paths();
 		if (isset($jsonContent->servers)) {
 			for ($i = count($jsonContent->servers) - 1; $i >= 0; $i--) {
-				$swagger->servers[] = new Server($jsonContent->servers[$i]->url, $jsonContent->servers[$i]->description);
+				$this->swagger->servers[] = new Server($jsonContent->servers[$i]->url, $jsonContent->servers[$i]->description);
 			}
 		}
 		if (isset($jsonContent->paths)) {
-			self::mapPaths($swagger, $jsonContent->paths);
+			self::mapPaths($jsonContent->paths);
 		}
-		return $swagger;
 	}
 
-	public function mapConfig(array $config, Swagger $swagger = null): Swagger
+	public function mapConfig(array $config)
 	{
-		if (!$swagger) {
-			$swagger = new Swagger(new Info($config['name'], $config['info'], $config['version']));
+		if (!$this->swagger) {
+			$this->swagger = new Swagger(new Info($config['name'], $config['info'], $config['version']));
 		} else {
-			$swagger->info->title = $config['name'];
-			$swagger->info->description = $config['info'];
-			$swagger->info->version = $config['version'];
+			$this->swagger->info->title = $config['name'];
+			$this->swagger->info->description = $config['info'];
+			$this->swagger->info->version = $config['version'];
 		}
 		if (!empty($config['servers'])) {
 			foreach ($config['servers'] as $server) {
-				$swagger->addServer(new Server($server['url'], $server['description']));
+				$this->swagger->addServer(new Server($server['url'], $server['description']));
 			}
 		}
 
-		return $swagger;
 	}
 
-	public function mapSchemaFromModel(string $model, stdClass $example = null)
+	public function mapPath(Event $mappedEvent, SwaggerRequest $pathAnnotation)
 	{
-		return $this->modelDescriber->describe($model, $example);
+		$path = $this->pathMapper->mapRequest($mappedEvent, $pathAnnotation);
+		if (!empty($model)) {
+			$this->createSchemaReference($model, $path->getOperation($mappedEvent->operationName)->requestBody->content, $mappedEvent);
+		}
+		$this->swagger->addPath($mappedEvent->pathName, $path);
 	}
 
-	private function mapPaths(Swagger $swagger, stdClass $jsonPaths)
+	public function mapResponse(Event $mappedEvent, SwaggerResponse $responseAnnotation)
+	{
+		$response = $this->responseMapper->mapResponse($mappedEvent, $responseAnnotation);
+
+		if (isset($responseAnnotation->model)) {
+			$this->createSchemaReference($responseAnnotation->model, $response->content, $mappedEvent);
+		}
+
+		$this->swagger->addResponse(
+			$mappedEvent->pathName,
+			$mappedEvent->operationName,
+			$mappedEvent->responseName,
+			$response
+		);
+	}
+
+	private function mapPaths(stdClass $jsonPaths)
 	{
 		if (!empty($jsonPaths)) {
 			foreach ($jsonPaths as $pathName => $operations) {
 				$path = new Path();
 				self::mapOperations($path, $operations);
-				$swagger->paths->addPath($pathName, $path);
+				$this->swagger->paths->addPath($pathName, $path);
 			}
 		}
+	}
+
+	public function mapSchemaFromModel(string $model, stdClass $example = null)
+	{
+		return $this->modelDescriber->describe($model, $this->swagger, $example);
 	}
 
 	private function mapOperations(Path $path, stdClass $jsonOperations)
@@ -141,4 +192,15 @@ class SwaggerMapper
 		return $jsonParameters;
 	}
 
+	private function createSchemaReference(string $model, Content $content, Event $mappedEvent)
+	{
+		$reflect = new ReflectionClass($model);
+		$modelName = $reflect->getShortName();
+		$schema = $this->mapSchemaFromModel($model, $mappedEvent->content);
+
+		$content
+			->getContentType($mappedEvent->contentType)
+			->schema->setReference(sprintf('#/components/schemas/%s', $modelName));
+		$this->swagger->components->schemas->addSchema($modelName, $schema);
+	}
 }

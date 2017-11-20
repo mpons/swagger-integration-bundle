@@ -30,4 +30,45 @@ class SwaggerMapperTest extends TestCase
 		$swagger = $swaggerMapper->mapJson(json_decode(file_get_contents(self::JSON_PATH)));
 		verify($swagger)->notEmpty();
 	}
+
+	/**
+	 * @test
+	 */
+	public function should_properly_map_config()
+	{
+		$config = $this->createConfig();
+		$swaggerMapper = new SwaggerMapper($this->modelDescriber->reveal());
+		$swagger = $swaggerMapper->mapConfig($config);
+		verify($swagger)->notEmpty();
+		verify($swagger->info)->notEmpty();
+		verify($swagger->info->title)->notEmpty();
+	}
+
+	/**
+	 * @test
+	 */
+	public function should_properly_map_servers()
+	{
+		$config = $this->createConfig();
+		$swaggerMapper = new SwaggerMapper($this->modelDescriber->reveal());
+		$swagger = $swaggerMapper->mapConfig($config);
+		verify($swagger)->notEmpty();
+		verify($swagger->servers)->notEmpty();
+		verify(count($swagger->servers))->equals(1);
+	}
+
+	private function createConfig()
+	{
+		return $config = [
+			'name' => 'test name',
+			'info' => 'test info',
+			'version' => 'test version',
+			'servers' => [
+				[
+					'url' => 'test url',
+					'description' => 'test description',
+				]
+			]
+		];
+	}
 }
