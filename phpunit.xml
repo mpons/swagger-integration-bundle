@@ -1,0 +1,7 @@
+<phpunit colors="true">
+    <testsuites>
+     <testsuite name="Verify">
+      <directory>src/Mpons/SwaggerIntegrationBundle/Tests</directory>
+     </testsuite>
+    </testsuites>
+</phpunit>

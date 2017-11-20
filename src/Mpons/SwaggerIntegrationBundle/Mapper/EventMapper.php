@@ -2,18 +2,20 @@
 
 namespace Mpons\SwaggerIntegrationBundle\Mapper;
 
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
+use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
 use Mpons\SwaggerIntegrationBundle\Model\Event;
 use Mpons\SwaggerIntegrationBundle\Model\Swagger\Content;
 use Mpons\SwaggerIntegrationBundle\Model\Swagger\Operation;
 use Mpons\SwaggerIntegrationBundle\Model\Swagger\Parameter;
 use Mpons\SwaggerIntegrationBundle\Model\Swagger\Path;
+use Mpons\SwaggerIntegrationBundle\Model\Swagger\Response;
 use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\Event\KernelEvent;
 
 class EventMapper
 {
-
 	/**
 	 * @var array
 	 */
@@ -33,23 +35,6 @@ class EventMapper
 		$this->excludeHeaders = $excludeHeaders;
 	}
 
-	public function mapRequest(Event $event): Path
-	{
-		$path = new Path();
-		$path->setOperation($event->operationName, new Operation('', '', $event->parameters));
-		$path->getOperation($event->operationName)->addRequest();
-		$path->getOperation($event->operationName)->requestBody->content->addContentType($event->contentType);
-
-		return $path;
-	}
-
-	public function mapResponse(Event $event): Content
-	{
-		$content = new Content();
-		$content->addContentType($event->contentType);
-		return $content;
-	}
-
 	public function mapEvent(KernelEvent $kernelEvent): Event
 	{
 		$event = new Event();
@@ -58,6 +43,10 @@ class EventMapper
 
 		$event->pathName = $kernelEvent->getRequest()->getPathInfo();
 		$event->operationName = strtolower($kernelEvent->getRequest()->getMethod());
+
+		if ($kernelEvent->getRequest()->getContent()) {
+			$event->content = json_decode($kernelEvent->getRequest()->getContent());
+		}
 
 		if ($kernelEvent instanceof FilterResponseEvent) {
 			$event->responseName = $kernelEvent->getResponse()->getStatusCode();
@@ -80,20 +69,21 @@ class EventMapper
 		}
 	}
 
-	public function setIncludeHeaders($headerNames)
+	public function setIncludeHeaders(?array $headerNames)
 	{
 		$this->includeHeaders = array_merge($this->includeHeaders ?? [], $headerNames ?? []);
 	}
 
-	public function setExcludeHeaders($headerNames)
+	public function setExcludeHeaders(?array $headerNames)
 	{
 		$this->excludeHeaders = array_merge($this->excludeHeaders ?? [], $headerNames ?? []);
 	}
 
-	private function isHeaderAllowed(string $headerName)
+	private function isHeaderAllowed(string $headerName): bool
 	{
 		$isIn = in_array($headerName, $this->includeHeaders) || empty($this->includeHeaders);
 		$isOut = in_array($headerName, $this->excludeHeaders);
+
 		return $isIn && !$isOut;
 	}
 }

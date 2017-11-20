@@ -6,29 +6,44 @@
 	<services>
 
 		<service class="Mpons\SwaggerIntegrationBundle\EventListener\RequestListener">
-			<argument id="Mpons\SwaggerIntegrationBundle\Service\SwaggerService" type="service"/>
-			<tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest"/>
-			<tag name="kernel.event_listener" event="kernel.response" method="onKernelResponse"/>
+			<argument id="Mpons\SwaggerIntegrationBundle\Service\SwaggerService" type="service" />
+			<tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" />
+			<tag name="kernel.event_listener" event="kernel.response" method="onKernelResponse" />
+			<tag name="kernel.event_listener" event="kernel.controller" method="onKernelController" />
 		</service>
 
-		<service class="Mpons\SwaggerIntegrationBundle\Service\SwaggerService" id="Mpons\SwaggerIntegrationBundle\Service\SwaggerService">
-			<argument/> <!-- config -->
-			<argument type="service" id="Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper"/>
-			<argument type="service" id="Mpons\SwaggerIntegrationBundle\Mapper\EventMapper"/>
+		<service class="Mpons\SwaggerIntegrationBundle\Service\SwaggerService"
+				 id="Mpons\SwaggerIntegrationBundle\Service\SwaggerService">
+			<argument /> <!-- config -->
+			<argument type="service" id="Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper" />
+			<argument type="service" id="Mpons\SwaggerIntegrationBundle\Mapper\EventMapper" />
 		</service>
 
-		<service class="Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper" id="Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper">
-			<argument type="service" id="Mpons\SwaggerIntegrationBundle\ModelDescriber\JMSModelDescriber"/>
+		<service class="Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper"
+				 id="Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper">
+			<argument type="service" id="Mpons\SwaggerIntegrationBundle\ModelDescriber\JMSModelDescriber" />
+			<argument type="service" id="Mpons\SwaggerIntegrationBundle\Mapper\PathMapper" />
+			<argument type="service" id="Mpons\SwaggerIntegrationBundle\Mapper\ResponseMapper" />
 		</service>
 
-		<service class="Mpons\SwaggerIntegrationBundle\Mapper\EventMapper" id="Mpons\SwaggerIntegrationBundle\Mapper\EventMapper">
+		<service class="Mpons\SwaggerIntegrationBundle\Mapper\PathMapper"
+				 id="Mpons\SwaggerIntegrationBundle\Mapper\PathMapper">
+		</service>
+
+		<service class="Mpons\SwaggerIntegrationBundle\Mapper\ResponseMapper"
+				 id="Mpons\SwaggerIntegrationBundle\Mapper\ResponseMapper">
+		</service>
+
+		<service class="Mpons\SwaggerIntegrationBundle\Mapper\EventMapper"
+				 id="Mpons\SwaggerIntegrationBundle\Mapper\EventMapper">
 			<argument /> <!-- includeHeaders -->
 			<argument /> <!-- excludeHeaderss -->
 		</service>
 
-		<service class="Mpons\SwaggerIntegrationBundle\ModelDescriber\JMSModelDescriber" id="Mpons\SwaggerIntegrationBundle\ModelDescriber\JMSModelDescriber">
-			<argument type="service" id="jms_serializer.metadata_factory"/>
-			<argument type="service" id="jms_serializer.naming_strategy"/>
+		<service class="Mpons\SwaggerIntegrationBundle\ModelDescriber\JMSModelDescriber"
+				 id="Mpons\SwaggerIntegrationBundle\ModelDescriber\JMSModelDescriber">
+			<argument type="service" id="jms_serializer.metadata_factory" />
+			<argument type="service" id="jms_serializer.naming_strategy" />
 		</service>
 	</services>
 </container>

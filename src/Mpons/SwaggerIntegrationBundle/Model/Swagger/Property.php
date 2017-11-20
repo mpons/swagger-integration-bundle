@@ -63,4 +63,8 @@ class Property
 	{
 		$this->format = $format;
 	}
+	public function setRef(string $ref)
+	{
+		$this->{'$ref'} = $ref;
+	}
 }

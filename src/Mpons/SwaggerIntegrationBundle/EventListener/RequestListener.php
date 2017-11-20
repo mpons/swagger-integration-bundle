@@ -6,6 +6,7 @@ use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerHeaders;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
 use Mpons\SwaggerIntegrationBundle\Service\SwaggerService;
+use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 
@@ -50,6 +51,14 @@ class RequestListener
 			self::$swagger->addResponse($event, self::$response);
 			self::$response = null;
 		}
+	}
+
+	public function onKernelController(FilterControllerEvent $event)
+	{
+		$controller = $event->getController();
+		$controllerClass = $controller[0];
+		$controllerMethod = $controller[1];
+		return $event;
 	}
 
 	public static function terminate()
