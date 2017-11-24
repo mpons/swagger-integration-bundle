@@ -64,8 +64,11 @@ class SwaggerService
 		);
 	}
 
-	public function addResponse(FilterResponseEvent $event, SwaggerResponse $responseAnnotation)
+	public function addResponse(FilterResponseEvent $event, SwaggerResponse $responseAnnotation, SwaggerHeaders $headersAnnotation)
 	{
+		$this->eventMapper->setIncludeHeaders($headersAnnotation->getIncludes());
+		$this->eventMapper->setExcludeHeaders($headersAnnotation->getExcludes());
+
 		$this->swaggerMapper->mapResponse(
 			$this->eventMapper->mapEvent($event),
 			$responseAnnotation

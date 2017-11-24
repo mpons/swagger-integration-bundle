@@ -16,4 +16,13 @@ class Paths
 	public function addPath(string $pathName, Path $path){
 		$this->{$pathName} = $path;
 	}
+
+	public function getPath(string $pathName): ?Path
+	{
+		if(!$this->hasPath($pathName)){
+			return null;
+		}
+
+		return $this->{$pathName};
+	}
 }

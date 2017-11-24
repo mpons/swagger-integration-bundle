@@ -14,6 +14,7 @@ class ResponseMapper
 		$content = new Content();
 		$content->addContentType($event->contentType);
 		$response = new Response($annotation->description, $content);
+		$event->pathName = !empty($annotation->getEndpoint()) ? $annotation->getEndpoint() : $event->pathName;
 
 		return $response;
 	}

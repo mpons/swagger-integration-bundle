@@ -7,10 +7,14 @@
 
 		<service class="Mpons\SwaggerIntegrationBundle\EventListener\RequestListener">
 			<argument id="Mpons\SwaggerIntegrationBundle\Service\SwaggerService" type="service" />
+			<argument id="Mpons\SwaggerIntegrationBundle\Service\AnnotationService" type="service" />
 			<tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" />
 			<tag name="kernel.event_listener" event="kernel.response" method="onKernelResponse" />
 			<tag name="kernel.event_listener" event="kernel.controller" method="onKernelController" />
 		</service>
+
+		<service class="Mpons\SwaggerIntegrationBundle\Service\AnnotationService"
+				 id="Mpons\SwaggerIntegrationBundle\Service\AnnotationService" />
 
 		<service class="Mpons\SwaggerIntegrationBundle\Service\SwaggerService"
 				 id="Mpons\SwaggerIntegrationBundle\Service\SwaggerService">

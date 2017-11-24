@@ -7,6 +7,7 @@ use Doctrine\Common\Annotations\DocParser;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerHeaders;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
+use Mpons\SwaggerIntegrationBundle\Service\AnnotationService;
 use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\Test;
 use PHPUnit\Framework\TestListener;
@@ -33,33 +34,13 @@ class SwaggerIntegrationTestListener implements TestListener
 	protected $suites = 0;
 
 	/**
-	 * @var AnnotationReader
+	 * @var AnnotationService
 	 */
-	protected $reader;
-
-	/**
-	 * @var string
-	 */
-	protected $endpointAnnotationClass;
-
-	/**
-	 * @var string
-	 */
-	protected $responseAnnotationClass;
-    
-	/**
-	 * @var string
-	 */
-	protected $headersAnnotationClass;
+	protected $annotationService;
 
 	public function __construct(array $options = array())
 	{
-		$parser = new DocParser();
-		$parser->setIgnoreNotImportedAnnotations(true);
-		$this->reader = new AnnotationReader($parser);
-		$this->endpointAnnotationClass = SwaggerRequest::class;
-		$this->responseAnnotationClass = SwaggerResponse::class;
-		$this->headersAnnotationClass = SwaggerHeaders::class;
+		$this->annotationService = new AnnotationService();
 	}
 
 	/**
@@ -69,31 +50,23 @@ class SwaggerIntegrationTestListener implements TestListener
 	{
 		$class = get_class($test);
 		$method = $test->getName(false);
-		$language = new ExpressionLanguage();
+		RequestListener::$ignore = true;
 
-		if (!method_exists($class, $method)) {
-			return;
-		}
-
-		$reflectionMethod = new ReflectionMethod($class, $method);
-		$pathAnnotation = $this->reader->getMethodAnnotation($reflectionMethod, $this->endpointAnnotationClass);
-		$responseAnnotation = $this->reader->getMethodAnnotation($reflectionMethod, $this->responseAnnotationClass);
-		$headersAnnotation = $this->reader->getMethodAnnotation($reflectionMethod, $this->headersAnnotationClass);
+		$pathAnnotation = $this->annotationService->getPathAnnotation($class, $method);
+		$responseAnnotation = $this->annotationService->getResponseAnnotation($class, $method);
+		$headersAnnotation = $this->annotationService->getHeadersAnnotation($class, $method);
 
 		if ($pathAnnotation) {
 			RequestListener::$path = $pathAnnotation;
+			RequestListener::$ignore = false;
 		}
 		if ($responseAnnotation) {
 			RequestListener::$response = $responseAnnotation;
+			RequestListener::$ignore = false;
 		}
 		if ($headersAnnotation) {
-			if (!empty($headersAnnotation->include)) {
-				$headersAnnotation->setIncludes($language->evaluate($headersAnnotation->include));
-			}
-			if (!empty($headersAnnotation->exclude)) {
-				$headersAnnotation->setExluces($language->evaluate($headersAnnotation->exclude));
-			}
 			RequestListener::$headers = $headersAnnotation;
+			RequestListener::$ignore = false;
 		}
 	}
 

@@ -14,6 +14,7 @@ class PathMapper
 		$path = new Path();
 		$summary = $annotation ? $annotation->summary : '';
 		$description = $annotation ? $annotation->description : '';
+		$event->pathName = !empty($annotation->getEndpoint()) ? $annotation->getEndpoint() : $event->pathName;
 		$path->setOperation($event->operationName, new Operation($summary, $description, $event->parameters));
 		if ($annotation && $annotation->model) {
 			$path->getOperation($event->operationName)->addRequest();
