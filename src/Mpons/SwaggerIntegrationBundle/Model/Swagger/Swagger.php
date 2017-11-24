@@ -55,8 +55,10 @@ class Swagger
 			$this->paths->addPath($pathName, $path);
 		}else{
 			foreach ($path as $operationName => $operation) {
-				if(!$this->paths->{$pathName}->hasOperation($operationName)){
-					$this->paths->{$pathName}->addOperation($operationName, $operation);
+				if(!$this->paths->getPath($pathName)->hasOperation($operationName)){
+					$this->paths->getPath($pathName)->addOperation($operationName, $operation);
+				}else{
+					$this->paths->getPath($pathName)->mergeOperation($operationName, $operation);
 				}
 			}
 		}
@@ -65,13 +67,15 @@ class Swagger
 	public function addResponse(string $pathName, string $operationName, string $responseName, Response $response)
 	{
 		if(!$this->paths->hasPath($pathName)) {
-			throw new \Exception('Cannot add response to a non-existing path');
+			$this->addPath($pathName, new Path($operationName));
+			//throw new \Exception('Cannot add response to a non-existing path');
 		}
-		if(!$this->paths->{$pathName}->hasOperation($operationName)){
-			throw new \Exception('Cannot add response to a non-existing operation');
+		if(!$this->paths->getPath($pathName)->hasOperation($operationName)){
+			$this->paths->getPath($pathName)->addOperation($operationName);
+			//throw new \Exception('Cannot add response to a non-existing operation');
 		}
-		if(!$this->paths->{$pathName}->{$operationName}->responses->hasResponse($responseName)){
-			$this->paths->{$pathName}->{$operationName}->responses->addResponse($responseName, $response);
+		if(!$this->paths->getPath($pathName)->getOperation($operationName)->responses->hasResponse($responseName)){
+			$this->paths->getPath($pathName)->getOperation($operationName)->responses->addResponse($responseName, $response);
 		}
 	}
 
