@@ -9,13 +9,12 @@ use Mpons\SwaggerIntegrationBundle\Model\Swagger\Response;
 
 class ResponseMapper
 {
-	public function mapResponse(Event $event, ?SwaggerResponse $annotation): Response
-	{
-		$content = new Content();
-		$content->addContentType($event->contentType);
-		$response = new Response($annotation->description, $content);
-		$event->pathName = !empty($annotation->getEndpoint()) ? $annotation->getEndpoint() : $event->pathName;
+    public function mapResponse(Event $event, ?SwaggerResponse $annotation): Response
+    {
+        $content = new Content();
+        $content->addContentType($event->contentType);
+        $response = new Response($annotation->description, $content);
 
-		return $response;
-	}
+        return $response;
+    }
 }
