@@ -115,7 +115,9 @@ class SwaggerMapper
 
         if (isset($responseAnnotation->model)) {
             $this->createSchemaReference($responseAnnotation->model, $response->content, $mappedEvent);
-        }
+        }elseif (!empty($mappedEvent->content)) {
+			$response->examples->addExample($mappedEvent->contentType, json_encode($mappedEvent->content));
+		}
 
         $this->swagger->addResponse(
             $mappedEvent->pathName,
