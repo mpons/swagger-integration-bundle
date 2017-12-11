@@ -22,9 +22,17 @@ class Response
      */
     public $content;
 
+	/**
+	 * @Type("Examples")
+	 *
+	 * @var Examples
+	 */
+	public $examples;
+
 	public function __construct(string $description, Content $content)
 	{
 		$this->description = $description;
 		$this->content = $content;
+		$this->examples = new Examples();
 	}
 }
