@@ -2,12 +2,10 @@
 
 namespace Mpons\SwaggerIntegrationBundle\Model\Swagger;
 
-use stdClass;
-
 class Components
 {
 	/**
-	 * @var stdClass
+	 * @var SecuritySchemes
 	 */
     public $securitySchemes;
 
@@ -19,6 +17,22 @@ class Components
     public function __construct()
 	{
 		$this->schemas = new Schemas();
-		$this->securitySchemes = new StdClass();
+		$this->securitySchemes = new SecuritySchemes();
+	}
+
+	/**
+	 * @return SecuritySchemes
+	 */
+	public function getSecuritySchemes(): SecuritySchemes
+	{
+		return $this->securitySchemes;
+	}
+
+	/**
+	 * @return Schemas
+	 */
+	public function getSchemas(): Schemas
+	{
+		return $this->schemas;
 	}
 }

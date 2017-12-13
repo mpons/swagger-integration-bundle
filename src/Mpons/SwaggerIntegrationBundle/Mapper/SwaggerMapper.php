@@ -98,11 +98,14 @@ class SwaggerMapper
                 $this->swagger->addServer(new Server($server['url'], $server['description']));
             }
         }
+		if (!empty($config['security'])) {
+			$this->swagger->components->securitySchemes->addScheme($config['security']['type'], $config['security']['in'], $config['security']['name']);
+		}
     }
 
     public function mapPath(Event $mappedEvent, SwaggerRequest $pathAnnotation)
     {
-        $path = $this->pathMapper->mapRequest($mappedEvent, $pathAnnotation);
+        $path = $this->pathMapper->mapRequest($mappedEvent, $pathAnnotation, $this->swagger->getComponents()->getSecuritySchemes());
         if (!empty($pathAnnotation->model)) {
             $this->createSchemaReference($pathAnnotation->model, $path->getOperation($mappedEvent->operationName)->requestBody->content, $mappedEvent);
         }

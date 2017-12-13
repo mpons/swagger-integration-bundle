@@ -48,16 +48,9 @@ class SwaggerServiceTest extends TestCase
 	public function should_load_json_file()
 	{
 		$config = $this->generateConfig();
-		$mockSwagger = new Swagger(new Info('testTitle', 'testDescription', 'testVersion'));
-		$this->swaggerMapper->mapJson(Argument::any())
-			->willReturn($mockSwagger);
-		$this->swaggerMapper->mapConfig(Argument::any(),Argument::exact($mockSwagger))->willReturn($mockSwagger);
-		$swaggerService = new SwaggerService($config, $this->swaggerMapper->reveal(), $this->eventMapper->reveal());
-		verify($swaggerService->swagger)->notEmpty();
-		verify($swaggerService->swagger->info)->notEmpty();
-		verify($swaggerService->swagger->info->title)->equals('testTitle');
-		verify($swaggerService->swagger->info->description)->equals('testDescription');
-		verify($swaggerService->swagger->info->version)->equals('testVersion');
+		new SwaggerService($config, $this->swaggerMapper->reveal(), $this->eventMapper->reveal());
+		$this->swaggerMapper->mapJson(Argument::any())->shouldHaveBeenCalled();
+		$this->swaggerMapper->mapConfig(Argument::any())->shouldHaveBeenCalled();
 	}
 
 	private function generateConfig()

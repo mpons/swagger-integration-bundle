@@ -8,9 +8,13 @@ use JMS\Serializer\Naming\SerializedNameAnnotationStrategy;
 use Metadata\ClassMetadata;
 use Metadata\MetadataFactory;
 use Metadata\MetadataFactoryInterface;
+use Mpons\SwaggerIntegrationBundle\Model\Swagger\Components;
+use Mpons\SwaggerIntegrationBundle\Model\Swagger\Schemas;
+use Mpons\SwaggerIntegrationBundle\Model\Swagger\Swagger;
 use Mpons\SwaggerIntegrationBundle\ModelDescriber\JMSModelDescriber;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
+use Prophecy\Prophecy\ObjectProphecy;
 
 class JMSModelDescriberTest extends TestCase
 {
@@ -32,10 +36,19 @@ class JMSModelDescriberTest extends TestCase
 	 */
 	private $jmsModelDescriber;
 
+	/**
+	 * @var ObjectProphecy|Swagger
+	 */
+	private $swagger;
+
 	public function setUp()
 	{
 		$this->factory = $this->prophesize(MetadataFactory::class);
 		$this->namingStrategy = $this->prophesize(SerializedNameAnnotationStrategy::class);
+		$this->swagger = $this->prophesize(Swagger::class);
+		$components = $this->prophesize(Components::class);
+		$components->getSchemas()->willReturn(new Schemas());
+		$this->swagger->getComponents()->willReturn($components);
 		$this->jmsModelDescriber = new JMSModelDescriber($this->factory->reveal(), $this->namingStrategy->reveal());
 	}
 
@@ -44,7 +57,7 @@ class JMSModelDescriberTest extends TestCase
 	 */
 	public function describe_always_return_schema()
 	{
-		$schema = $this->jmsModelDescriber->describe('RandomModel');
+		$schema = $this->jmsModelDescriber->describe('RandomModel', $this->swagger->reveal());
 		verify($schema)->notEmpty();
 	}
 
@@ -53,11 +66,11 @@ class JMSModelDescriberTest extends TestCase
 	 */
 	public function describe_return_type_when_unknown_or_normalized_standard()
 	{
-		$schema = $this->jmsModelDescriber->describe('RandomModel');
+		$schema = $this->jmsModelDescriber->describe('RandomModel', $this->swagger->reveal());
 		verify($schema->type)->equals('RandomModel');
-		$schema = $this->jmsModelDescriber->describe('string');
+		$schema = $this->jmsModelDescriber->describe('string', $this->swagger->reveal());
 		verify($schema->type)->equals('string');
-		$schema = $this->jmsModelDescriber->describe('DateTime');
+		$schema = $this->jmsModelDescriber->describe('DateTime', $this->swagger->reveal());
 		verify($schema->type)->equals('string');
 	}
 
@@ -68,7 +81,7 @@ class JMSModelDescriberTest extends TestCase
 	{
 		$this->createMetadata();
 
-		$schema = $this->jmsModelDescriber->describe(self::TEST_MODEL);
+		$schema = $this->jmsModelDescriber->describe(self::TEST_MODEL, $this->swagger->reveal());
 		verify($schema)->notEmpty();
 		verify($schema->type)->equals('object');
 		verify($schema->getProperties()->hasProperty('testStringProperty'))->true();
