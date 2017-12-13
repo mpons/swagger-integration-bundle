@@ -32,12 +32,18 @@ class Operation
 	 */
     public $requestBody;
 
+	/**
+	 * @var Security[]
+	 */
+    public $security;
+
 	public function __construct(string $summary = '', string $description = '', array $parameters = [], Responses $responses = null)
 	{
 		$this->summary = $summary;
 		$this->description = $description;
 		$this->parameters = $parameters;
 		$this->responses = $responses ? $responses : new Responses();
+		$this->security = [];
 	}
 
 	public function addRequest()
@@ -53,4 +59,8 @@ class Operation
 		return $this->requestBody;
 	}
 
+	public function addSecurity(string $name)
+	{
+		$this->security[] = new Security($name);
+	}
 }

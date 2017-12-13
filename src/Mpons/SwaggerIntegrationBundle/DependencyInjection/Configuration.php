@@ -39,6 +39,13 @@ class Configuration implements ConfigurationInterface
 						->treatNullLike([])->prototype('scalar')->end()
 					->end()
 				->end()
+				->arrayNode('security')
+					->children()
+						->scalarNode('type')->defaultValue('')->end()
+						->scalarNode('in')->defaultValue('')->end()
+						->scalarNode('name')->defaultValue('')->end()
+					->end()
+				->end()
 			->end();
 		return $treeBuilder;
 	}

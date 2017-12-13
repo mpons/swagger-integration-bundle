@@ -193,7 +193,7 @@ class JMSModelDescriber implements ModelDescriberInterface
             $modelName = $reflect->getShortName();
             $this->schemaCollection[$type] = sprintf('#/components/schemas/%s', $modelName);
             if ($schema && $swagger) {
-                $swagger->components->schemas->addSchema($modelName, $schema);
+                $swagger->getComponents()->getSchemas()->addSchema($modelName, $schema);
             }
         }
     }

@@ -2,12 +2,13 @@
 
 namespace Mpons\SwaggerIntegrationBundle\Model;
 
+use Mpons\SwaggerIntegrationBundle\Model\Swagger\Parameter;
 use stdClass;
 
 class Event
 {
     /**
-     * @var array
+     * @var Parameter[]
      */
     public $parameters;
 

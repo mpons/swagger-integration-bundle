@@ -92,4 +92,9 @@ class Swagger
             $this->servers[] = $server;
         }
     }
+
+    public function getComponents()
+	{
+		return $this->components;
+	}
 }
