@@ -2,6 +2,7 @@
 
 namespace Mpons\SwaggerIntegrationBundle\Service;
 
+use Exception;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerHeaders;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
@@ -95,9 +96,13 @@ class SwaggerService
     private function outputToFile(Swagger $swaggerModel, string $jsonPath)
     {
         $json = $this->filterJson(json_encode($swaggerModel, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-        $fp = fopen($jsonPath, 'w');
-        fwrite($fp, $json);
-        fclose($fp);
+        try {
+            $fp = fopen($jsonPath, 'w');
+            fwrite($fp, $json);
+            fclose($fp);
+        } catch (Exception $e) {
+            //Do not disturb the tests -> silent fail
+        }
     }
 
     private function filterJson(string $json): string
