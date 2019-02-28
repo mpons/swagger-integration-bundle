@@ -9,10 +9,10 @@ use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
 use Mpons\SwaggerIntegrationBundle\Mapper\EventMapper;
 use Mpons\SwaggerIntegrationBundle\Mapper\SwaggerMapper;
 use Mpons\SwaggerIntegrationBundle\Model\Swagger\Swagger;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use stdClass;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException;
 use Symfony\Component\HttpKernel\Event\KernelEvent;
+use Symfony\Component\Routing\Annotation\Route;
 
 class SwaggerService
 {
@@ -35,8 +35,7 @@ class SwaggerService
         array $config,
         SwaggerMapper $swaggerMapper,
         EventMapper $eventMapper
-    )
-    {
+    ) {
         $this->swaggerMapper = $swaggerMapper;
         $this->eventMapper = $eventMapper;
 

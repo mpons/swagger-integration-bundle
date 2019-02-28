@@ -8,12 +8,12 @@ use FOS\RestBundle\Controller\Annotations\Delete;
 use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Controller\Annotations\Post;
 use FOS\RestBundle\Controller\Annotations\Put;
-use FOS\RestBundle\Controller\Annotations\Route;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerHeaders;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
 use ReflectionMethod;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
+use Symfony\Component\Routing\Annotation\Route;
 
 class AnnotationService
 {
