@@ -35,8 +35,7 @@ class SwaggerService
         array $config,
         SwaggerMapper $swaggerMapper,
         EventMapper $eventMapper
-    )
-    {
+    ) {
         $this->swaggerMapper = $swaggerMapper;
         $this->eventMapper = $eventMapper;
 

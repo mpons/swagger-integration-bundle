@@ -12,41 +12,41 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  */
 class Configuration implements ConfigurationInterface
 {
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getConfigTreeBuilder()
-	{
-		$treeBuilder = new TreeBuilder();
-		$rootNode = $treeBuilder->root('mpons_swagger_integration');
+    /**
+     * {@inheritdoc}
+     */
+    public function getConfigTreeBuilder()
+    {
+        $treeBuilder = new TreeBuilder();
+        $rootNode = $treeBuilder->root('mpons_swagger_integration');
 
-		$rootNode
-			->children()
-				->scalarNode('info')->defaultValue('')->end()
-				->scalarNode('name')->defaultValue('')->end()
-				->scalarNode('version')->defaultValue('0.0.1')->end()
-				->arrayNode('servers')
-					->prototype('array')
-						->children()
-							->scalarNode('url')->end()
-							->scalarNode('description')->defaultValue('')->end()
-						->end()
-					->end()
-				->end()
-				->scalarNode('json_path')->end()
-				->arrayNode('headers')
-					->prototype('array')
-						->treatNullLike([])->prototype('scalar')->end()
-					->end()
-				->end()
-				->arrayNode('security')
-					->children()
-						->scalarNode('type')->defaultValue('')->end()
-						->scalarNode('in')->defaultValue('')->end()
-						->scalarNode('name')->defaultValue('')->end()
-					->end()
-				->end()
-			->end();
-		return $treeBuilder;
-	}
+        $rootNode
+            ->children()
+                ->scalarNode('info')->defaultValue('')->end()
+                ->scalarNode('name')->defaultValue('')->end()
+                ->scalarNode('version')->defaultValue('0.0.1')->end()
+                ->arrayNode('servers')
+                    ->prototype('array')
+                        ->children()
+                            ->scalarNode('url')->end()
+                            ->scalarNode('description')->defaultValue('')->end()
+                        ->end()
+                    ->end()
+                ->end()
+                ->scalarNode('json_path')->end()
+                ->arrayNode('headers')
+                    ->prototype('array')
+                        ->treatNullLike([])->prototype('scalar')->end()
+                    ->end()
+                ->end()
+                ->arrayNode('security')
+                    ->children()
+                        ->scalarNode('type')->defaultValue('')->end()
+                        ->scalarNode('in')->defaultValue('')->end()
+                        ->scalarNode('name')->defaultValue('')->end()
+                    ->end()
+                ->end()
+            ->end();
+        return $treeBuilder;
+    }
 }
