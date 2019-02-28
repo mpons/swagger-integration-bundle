@@ -2,7 +2,6 @@
 
 namespace Mpons\SwaggerIntegrationBundle\EventListener;
 
-use FOS\RestBundle\Controller\Annotations\Route;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerHeaders;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerRequest;
 use Mpons\SwaggerIntegrationBundle\Annotation\SwaggerResponse;
@@ -12,6 +11,7 @@ use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\Event\KernelEvent;
+use Symfony\Component\Routing\Annotation\Route;
 
 class RequestListener
 {
