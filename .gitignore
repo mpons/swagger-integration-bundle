@@ -5,3 +5,4 @@
 coverage/*
 notes.md
 /.php_cs.cache
+composer.lock
